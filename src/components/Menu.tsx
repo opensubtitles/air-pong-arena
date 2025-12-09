@@ -13,6 +13,8 @@ export const Menu: React.FC = () => {
     const setGameMode = useGameStore((state) => state.setGameMode);
     const setIsHost = useGameStore((state) => state.setIsHost);
 
+    const [showAudioPrompt, setShowAudioPrompt] = useState(false);
+
     useEffect(() => {
         const tryPlay = () => {
             if (audioRef.current) {
@@ -20,24 +22,22 @@ export const Menu: React.FC = () => {
                 const playPromise = audioRef.current.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(() => {
-                        console.log('Autoplay prevented. Waiting for interaction...');
+                        console.log('Autoplay prevented. Showing prompt.');
+                        setShowAudioPrompt(true);
                     });
                 }
             }
         };
 
         tryPlay();
-
-        // Fallback: Play on first click
-        const handleInteraction = () => {
-            if (audioRef.current && audioRef.current.paused) {
-                audioRef.current.play().catch(console.error);
-            }
-        };
-
-        window.addEventListener('click', handleInteraction, { once: true });
-        return () => window.removeEventListener('click', handleInteraction);
     }, []);
+
+    const handleInteraction = () => {
+        if (audioRef.current) {
+            audioRef.current.play().catch(console.error);
+            setShowAudioPrompt(false);
+        }
+    };
 
     const toggleMute = () => {
         if (audioRef.current) {
@@ -75,6 +75,18 @@ export const Menu: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-transparent text-white font-mono z-10 relative">
             <audio ref={audioRef} src="./sounds/menu_theme.mp3" loop />
+
+            {/* Autoplay Overlay */}
+            {showAudioPrompt && (
+                <div
+                    className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm animate-in fade-in duration-300"
+                    onClick={handleInteraction}
+                >
+                    <Volume2 size={80} className="text-neon-blue mb-4 animate-bounce" />
+                    <h2 className="text-3xl font-bold text-white mb-2">SOUND REQUIRED</h2>
+                    <p className="text-xl text-neon-blue animate-pulse">Click anywhere to start</p>
+                </div>
+            )}
 
             <button
                 onClick={toggleMute}
