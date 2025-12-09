@@ -612,7 +612,7 @@ export const Calibration: React.FC = () => {
                             {/* PROGRESS BAR - MOVED AROUND MAIN ICON */
                                 // Note: CircularProgress now handles the background track itself (stroke="rgba(255,255,255,0.2)")
                             }
-                            {(step === 'CENTER_OPEN' || step === 'CENTER_FIST') && !showHandHint && (
+                            {(step === 'CENTER_OPEN' || step === 'CENTER_FIST' || step.includes('CENTER_RETURN') || step === 'FINAL_CONFIRM') && !showHandHint && (
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
                                     <CircularProgress
                                         progress={progress}
