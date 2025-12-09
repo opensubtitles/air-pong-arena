@@ -107,7 +107,7 @@ export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
                     }}
                     frameloop="always"
                 >
-                    {demoMode && <FPSLimiter fps={30} />}
+                    {demoMode && <FPSLimiter fps={20} />}
                     <PhysicsController />
                     {!demoMode && <KeyboardControls />}
 
