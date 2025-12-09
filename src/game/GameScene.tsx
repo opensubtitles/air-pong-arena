@@ -21,7 +21,7 @@ const FPSLimiter: React.FC<{ fps: number }> = ({ fps }) => {
     const lastFrameTime = useRef(performance.now());
     const frameInterval = 1000 / fps;
 
-    useFrame((state) => {
+    useFrame(() => {
         const now = performance.now();
         const delta = now - lastFrameTime.current;
 
