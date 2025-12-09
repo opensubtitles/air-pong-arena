@@ -417,8 +417,8 @@ export const Calibration: React.FC = () => {
 
 
                 case 'FINAL_CONFIRM':
-                    // Require fist in center position
-                    if (distFromCenter < 0.25 && gesture === 'fist') {
+                    // Require fist in center position (stricter than other steps)
+                    if (distFromCenter < 0.15 && gesture === 'fist') {
                         currentStatus = 'GREEN';
                         setStep('COMPLETE');
                         setMsg('GO! 🏁');
