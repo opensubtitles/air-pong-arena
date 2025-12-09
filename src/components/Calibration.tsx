@@ -158,6 +158,7 @@ export const Calibration: React.FC = () => {
             if (hands === 0 && step !== 'INIT') {
                 setMsg('Show your hand!');
                 setShowHandHint(true);
+                setSkeleton([]); // Clear skeleton
                 setSubMsg('');
                 setStatus('RED'); // Ensure Red Border
                 frameId = requestAnimationFrame(loop);
@@ -495,7 +496,7 @@ export const Calibration: React.FC = () => {
                 />
 
                 {/* SKELETON OVERLAY */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none -scale-x-100">
+                <svg className="absolute inset-0 w-full h-full pointer-events-none -scale-x-100 opacity-30">
                     {skeleton.length > 0 && connections.map(([start, end], i) => {
                         const p1 = skeleton[start];
                         const p2 = skeleton[end];
@@ -508,7 +509,6 @@ export const Calibration: React.FC = () => {
                                 stroke="#00F3FF"
                                 strokeWidth="3"
                                 strokeLinecap="round"
-                                opacity="0.8"
                             />
                         );
                     })}
@@ -525,6 +525,16 @@ export const Calibration: React.FC = () => {
 
                 {/* Overlays */}
                 <div className="absolute inset-0 pointer-events-none">
+
+                    {/* GLOBAL TOO CLOSE OVERLAY */}
+                    {(handTracking.debugInfo.handSize > 0.35 && step !== 'INIT') && (
+                        <div className="absolute inset-0 z-[100] bg-red-900/80 flex flex-col items-center justify-center animate-pulse">
+                            <div className="text-6xl mb-4">🛑</div>
+                            <h2 className="text-4xl font-black text-white uppercase tracking-widest">TOO CLOSE</h2>
+                            <p className="text-xl text-white mt-2 font-mono">Move Back 🔙</p>
+                        </div>
+                    )}
+
                     {/* Ghost Paddle / Marker */}
                     {(step !== 'INIT' && cameraReady) && (
                         <div
