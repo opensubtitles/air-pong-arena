@@ -220,14 +220,14 @@ export const Calibration: React.FC = () => {
                             holdTimer.current += dt;
                             currentStatus = 'GREEN';
 
-                            // 2000ms hold
-                            const p = Math.min((holdTimer.current / 2000) * 100, 100);
+                            // 1000ms hold (was 2000ms)
+                            const p = Math.min((holdTimer.current / 1000) * 100, 100);
                             setProgress(p);
                             // Direct feedback
                             setMsg('Hold Open... ✋');
-                            setSubMsg(`${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
+                            setSubMsg(`${Math.ceil((1000 - holdTimer.current) / 100)}%`);
 
-                            if (holdTimer.current > 2000) {
+                            if (holdTimer.current > 1000) {
                                 setStep('CENTER_FIST');
                                 setMsg('Now CLOSE your hand ✊');
                                 setSubMsg('Make a fist');
@@ -259,12 +259,12 @@ export const Calibration: React.FC = () => {
                             holdTimer.current += dt;
                             currentStatus = 'GREEN';
 
-                            const p = Math.min((holdTimer.current / 2000) * 100, 100);
+                            const p = Math.min((holdTimer.current / 1000) * 100, 100);
                             setProgress(p);
                             setMsg('Hold Steady... ✊');
-                            setSubMsg(`${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
+                            setSubMsg(`${Math.ceil((1000 - holdTimer.current) / 100)}%`);
 
-                            if (holdTimer.current > 2000) {
+                            if (holdTimer.current > 1000) {
                                 setStep('LEFT_MOVE');
                                 setMsg('Move LEFT ⬅️');
                                 setSubMsg('Keep Fist Closed');
@@ -607,7 +607,7 @@ export const Calibration: React.FC = () => {
                         ${showHandHint ? 'bg-black/60 z-50' : ''}
                     `}>
                         <div className={`relative flex flex-col items-center transition-transform duration-500
-                            ${showHandHint ? 'scale-[3.0]' : 'scale-100'} 
+                            ${showHandHint ? 'scale-[4.0]' : 'scale-100'} 
                         `}>
                             {/* PROGRESS BAR - MOVED AROUND MAIN ICON */
                                 // Note: CircularProgress now handles the background track itself (stroke="rgba(255,255,255,0.2)")
