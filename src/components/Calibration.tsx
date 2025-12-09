@@ -18,6 +18,8 @@ type CalibrationStep =
 // Helper Component for Circular Progress - Ring-only stroke
 const CircularProgress = ({ progress, color = '#00F3FF', size = 112, stroke = 4 }: { progress: number, color?: string, size?: number, stroke?: number }) => {
     const percentage = Math.max(0, Math.min(progress, 100));
+    // Only show fill color if progress is meaningful (>= 5%) to prevent flicker
+    const fillColor = percentage >= 5 ? color : 'rgba(255,255,255,0.3)';
 
     return (
         <div
@@ -25,7 +27,7 @@ const CircularProgress = ({ progress, color = '#00F3FF', size = 112, stroke = 4 
             style={{
                 width: size,
                 height: size,
-                background: `conic-gradient(${color} ${percentage * 3.6}deg, rgba(255,255,255,0.3) ${percentage * 3.6}deg)`,
+                background: `conic-gradient(${fillColor} ${percentage * 3.6}deg, rgba(255,255,255,0.3) ${percentage * 3.6}deg)`,
                 WebkitMaskImage: `radial-gradient(transparent ${size / 2 - stroke}px, black ${size / 2 - stroke}px)`,
                 maskImage: `radial-gradient(transparent ${size / 2 - stroke}px, black ${size / 2 - stroke}px)`,
                 transition: 'background 0.1s linear'
