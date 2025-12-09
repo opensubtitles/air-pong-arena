@@ -89,11 +89,18 @@ export const Calibration: React.FC = () => {
                 const checkCamera = setInterval(() => {
                     if (videoRef.current && videoRef.current.readyState === 4) {
                         clearInterval(checkCamera);
-                        // Delay showing "Show Hand" by 500ms
+                        // Delay showing message
                         setTimeout(() => {
                             setCameraReady(true);
-                            setStep('DISTANCE_CHECK');
-                            setMsg('Show your hand ✋');
+                            // Quick calibration for single player - skip to final step
+                            if (gameMode === 'SINGLE_PLAYER') {
+                                setStep('FINAL_CONFIRM');
+                                setMsg('Show your hand to start! ✋');
+                                setSubMsg('Move hand to control paddle');
+                            } else {
+                                setStep('DISTANCE_CHECK');
+                                setMsg('Show your hand ✋');
+                            }
                         }, 500);
                     }
                 }, 100);
