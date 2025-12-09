@@ -170,7 +170,7 @@ export const Calibration: React.FC = () => {
             // --- GLOBAL TOO CLOSE CHECK ---
             // If hand is massive (too close), nothing works well.
             // Warn user globally.
-            if (size > 0.4 && step !== 'INIT') {
+            if (size > 0.3 && step !== 'INIT') {
                 setMsg('TOO CLOSE! 🛑');
                 setSubMsg('Move back so we can see your whole hand');
                 setStatus('RED');
@@ -456,7 +456,7 @@ export const Calibration: React.FC = () => {
     const getStatusMessage = () => {
         if (!cameraReady) return "Initializing Camera...";
         if (handsDetected() === 0 && step !== 'INIT') return "NO HAND DETECTED 🕵️";
-        if (handTracking.debugInfo.handSize > 0.35) return "TOO CLOSE! MOVE BACK 🔙";
+        if (handTracking.debugInfo.handSize > 0.3) return "TOO CLOSE! MOVE BACK 🔙";
         if (handTracking.debugInfo.handSize < 0.1 && step !== 'INIT') return "TOO FAR! MOVE CLOSER 🔎";
 
         // Step specific
@@ -553,7 +553,7 @@ export const Calibration: React.FC = () => {
                 <div className="absolute inset-0 pointer-events-none">
 
                     {/* Floating "TOO CLOSE" Warning (Follows Hand) */}
-                    {(handTracking.debugInfo.handSize > 0.35 && step !== 'INIT') && (
+                    {(handTracking.debugInfo.handSize > 0.3 && step !== 'INIT') && (
                         <div
                             className="absolute z-50 flex flex-col items-center animate-bounce"
                             style={{
