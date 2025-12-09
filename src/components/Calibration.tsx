@@ -613,18 +613,18 @@ export const Calibration: React.FC = () => {
                         <div className={`relative flex flex-col items-center transition-transform duration-500
                             ${showHandHint ? 'scale-[3.0]' : 'scale-100'} 
                         `}>
-                            {/* Static Center Circle (Context only) */}
+                            {/* Static Center Circle (Background Track) */}
                             {((step === 'CENTER_OPEN' || step === 'CENTER_FIST') && !showHandHint) && (
-                                <div className="absolute rounded-full border-4 border-white/10 w-28 h-28 transform -translate-x-[0px] -translate-y-[0px] pointer-events-none" />
+                                <div className="absolute rounded-full border-4 border-white/10 w-[120px] h-[120px] pointer-events-none" />
                             )}
 
                             {/* PROGRESS BAR - MOVED AROUND MAIN ICON */}
-                            {(progress > 0 && !showHandHint) && (
+                            {(step === 'CENTER_OPEN' || step === 'CENTER_FIST') && !showHandHint && (
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
                                     <CircularProgress
                                         progress={progress}
-                                        size={140} // Larger to frame the icon
-                                        stroke={8}
+                                        size={120} // Matches w-[120px]
+                                        stroke={4} // Matches border-4
                                         color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
                                     />
                                 </div>
