@@ -129,8 +129,9 @@ export const Calibration: React.FC = () => {
             const size = info.handSize;  // ~0.1 to ~0.3 usually
             const gesture = info.gesture;
 
-            // Mirror X for display
-            setGhostX(1 - x);
+            // Mirror X for display (This is what the user SEES as their cursor)
+            const visualX = 1 - x;
+            setGhostX(visualX);
 
             // Global Hand Count Check
             if (hands === 0 && step !== 'INIT') {
@@ -271,10 +272,10 @@ export const Calibration: React.FC = () => {
                 case 'LEFT_MOVE':
                     /* 
                        Logic Update: 
-                       1. Must be in LEFT zone (x < 0.25).
-                       2. Must Hold for 1000ms.
+                       Check against visualX to match user perception.
+                       User moves physically Left -> Screen Left -> visualX < 0.25
                     */
-                    if (x < 0.25) { // Left 1/4
+                    if (visualX < 0.25) { // Left 1/4
                         if (gesture === 'fist') {
                             holdTimer.current += dt;
                             const p = Math.min((holdTimer.current / 1000) * 100, 100);
@@ -309,7 +310,8 @@ export const Calibration: React.FC = () => {
                 // I will include the rest of the cases with status updates.
 
                 case 'CENTER_RETURN_1':
-                    if (Math.abs(x - 0.5) < 0.15) {
+                    // Check Center (0.5 +/- 0.15)
+                    if (Math.abs(visualX - 0.5) < 0.15) {
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
                         if (holdTimer.current > 1000) { // Fast center check
@@ -330,17 +332,10 @@ export const Calibration: React.FC = () => {
                 case 'RIGHT_MOVE':
                     /* 
                       Logic Update: 
-                      1. Must be in RIGHT zone (x > 0.75).
-                      2. Must Hold for 1000ms.
+                      Check against visualX.
+                      User moves physically Right -> Screen Right -> visualX > 0.75
                    */
-                    if (x > 0.75) { // Right 1/4 (mirrored X < 0.25 on screen logic, but data is 0-1)
-                        // x is raw from mediapipe (0 is left, 1 is right - check flip logic)
-                        // wait, x is mirrored for rendering? No, video is scale-x-100 logic.
-                        // data x: 0 is left of camera stream (User's Right).
-                        // Let's assume standard intuitive mapping:
-                        // Left Move means User moves hand to THEIR Left (Camera Right).
-                        // Let's stick to existing thresholds. Previous code had x < 0.2 for Left.
-                        // So Right should be x > 0.8.
+                    if (visualX > 0.75) {
                         if (gesture === 'fist') {
                             holdTimer.current += dt;
                             const p = Math.min((holdTimer.current / 1000) * 100, 100);
@@ -369,7 +364,7 @@ export const Calibration: React.FC = () => {
                     break;
 
                 case 'CENTER_RETURN_2':
-                    if (Math.abs(x - 0.5) < 0.15) {
+                    if (Math.abs(visualX - 0.5) < 0.15) {
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
                         if (holdTimer.current > 1000) {
