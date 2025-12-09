@@ -585,17 +585,31 @@ export const Calibration: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Ghost Paddle / Marker */}
-                    {(step !== 'INIT' && cameraReady) && (
+                    {/* Ghost Paddle / Marker & ATTACHED PROGRESS */}
+                    {(step !== 'INIT' && cameraReady && handsDetected() > 0) && (
                         <div
-                            className="absolute bg-neon-blue/80 w-6 h-6 border-2 border-white rounded-full shadow-[0_0_15px_#00F3FF] z-10"
+                            className="absolute z-20 pointer-events-none"
                             style={{
                                 left: `${ghostX * 100}%`,
                                 top: `${ghostY * 100}%`,
-                                transform: 'translate(-50%, -50%)',
-                                opacity: handsDetected() > 0 ? 1 : 0
+                                transform: 'translate(-50%, -50%)'
                             }}
-                        />
+                        >
+                            {/* The actual cursor dot */}
+                            <div className="w-6 h-6 bg-neon-blue/80 border-2 border-white rounded-full shadow-[0_0_15px_#00F3FF]" />
+
+                            {/* Hand-Attached Progress Bar */}
+                            {progress > 0 && (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 flex items-center justify-center">
+                                    <CircularProgress
+                                        progress={progress}
+                                        size={80}
+                                        stroke={6} // Fixed prop name
+                                        color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     {/* Unified Central overlay for Hand Hint + Calibration Steps */}
@@ -603,19 +617,11 @@ export const Calibration: React.FC = () => {
                         ${showHandHint ? 'bg-black/60 z-50' : ''}
                     `}>
                         <div className={`relative flex flex-col items-center transition-transform duration-500
-                            ${showHandHint ? 'scale-[3.0]' : 'scale-100'}
+                            ${showHandHint ? 'scale-[3.0]' : 'scale-100'} 
                         `}>
-                            {/* Circular Progress (Shared CENTER) */}
+                            {/* Static Center Circle (Context only) - Progress moved to hand */}
                             {((step === 'CENTER_OPEN' || step === 'CENTER_FIST') && !showHandHint) && (
-                                <>
-                                    {/* Background Circle (Always visible for context) */}
-                                    <div className="absolute rounded-full border-4 border-white/10 w-28 h-28 transform -translate-x-[0px] -translate-y-[0px] pointer-events-none" />
-
-                                    <CircularProgress
-                                        progress={progress}
-                                        color={step === 'CENTER_FIST' ? '#F0F' : '#00F3FF'}
-                                    />
-                                </>
+                                <div className="absolute rounded-full border-4 border-white/10 w-28 h-28 transform -translate-x-[0px] -translate-y-[0px] pointer-events-none" />
                             )}
 
                             {/* Icons (Context Aware) */}

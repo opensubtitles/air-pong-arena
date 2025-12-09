@@ -21,6 +21,16 @@ function App() {
         </div>
       )}
 
+      {/* Game Music */}
+      {phase === 'PLAYING' && (
+        <audio
+          ref={(el) => { if (el) el.volume = 0.4; }}
+          src="./sounds/game_theme.mp3"
+          autoPlay
+          loop
+        />
+      )}
+
       {/* Main Content */}
       <div className="relative z-10 w-full h-full">
         {phase === 'MENU' && <Menu />}
