@@ -582,7 +582,7 @@ export const Calibration: React.FC = () => {
                     {/* Game Paddle Preview - Shows from CENTER_FIST onwards */}
                     {(step !== 'INIT' && step !== 'DISTANCE_CHECK' && step !== 'CENTER_OPEN' && cameraReady && handsDetected() > 0) && (
                         <div
-                            className="absolute bottom-8 z-20 pointer-events-none transition-all duration-100"
+                            className="absolute bottom-8 z-20 pointer-events-none"
                             style={{
                                 left: `${ghostX * 100}%`,
                                 transform: 'translateX(-50%)'
