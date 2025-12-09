@@ -4,7 +4,8 @@ import * as fp from 'fingerpose';
 export const FistGesture = new fp.GestureDescription('fist');
 
 // All fingers curled
-// Thumb can be half curled or full
+// Thumb can be straight, half curled, or full curled (relaxed fist)
+FistGesture.addCurl(fp.Finger.Thumb, fp.FingerCurl.NoCurl, 0.8); // Allow thumb out
 FistGesture.addCurl(fp.Finger.Thumb, fp.FingerCurl.HalfCurl, 1.0);
 FistGesture.addCurl(fp.Finger.Thumb, fp.FingerCurl.FullCurl, 1.0);
 
