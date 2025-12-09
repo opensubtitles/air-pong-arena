@@ -1,0 +1,652 @@
+# AIR PONG ARENA - Complete Game Design Specification
+
+## Core Concept
+A competitive multiplayer Pong evolution where players use their hands as physical paddles in 3D space. The camera tracks hand positions and gestures to control glowing energy paddles that deflect balls in a neon-lit arena.
+
+## Camera & Hand Tracking System
+
+### Initialization & Calibration
+1. **Welcome Screen**: Players position themselves 60-90cm from camera
+2. **Hand Calibration Sequence**:
+   - Show both open palms facing camera for 2 seconds
+   - System maps hand size, reach limits, and tracking boundaries
+   - Detect player's comfortable movement range (shoulder width, vertical reach)
+   - Create personalized "control zone" - your physical space = your paddle zone
+   - Visual feedback: green outline when hands properly detected, red when lost
+3. **Tracking Requirements**:
+   - Track both hands simultaneously (MediaPipe Hands or similar)
+   - Detect palm position (X, Y, Z depth)
+   - Recognize open palm vs closed fist vs pinch gesture
+   - Track hand rotation/tilt for advanced paddle angles
+   - 60fps minimum for responsive gameplay
+
+### Hand Control Mapping
+- **Open Palm** = Active paddle (glowing, solid)
+- **Closed Fist** = Paddle charges energy (pulsing effect)
+- **Pinch Gesture** (thumb + index) = Grab power-ups floating nearby
+- **Clap** (both hands touch) = Activate equipped power-up
+- **Hand Tilt/Rotation** = Paddle angle for ball spin control
+- **Depth (Z-axis)** = Paddle size (closer = smaller/faster, further = larger/slower)
+
+## Game Modes & Player Configurations
+
+### 2-Player Mode (Classic)
+- Top vs Bottom paddles
+- Each player uses ONE hand as paddle
+- Arena: rectangular, classic Pong style with neon edges
+- Camera can capture both players if sitting side-by-side
+
+### 4-Player Mode (Arena Battle)
+- Square arena with 4 walls
+- Each player controls one wall-side
+- Camera setup: 
+  - **Option A**: All 4 players around one device (tablet on table)
+  - **Option B**: 4 connected devices, each player on their screen
+- Ball bounces between all 4 sides
+- Eliminate players when ball passes their paddle 3 times
+- Last 2 standing = final duel
+
+### 6-Player Mode (Hexagon Chaos)
+- Hexagonal arena with 6 sides
+- Faster, more chaotic gameplay
+- 2 balls in play simultaneously
+- Perfect for party mode
+- Requires larger screen or multiple connected devices
+
+### 8-Player Mode (Octagon Madness)
+- Maximum chaos mode
+- 3 balls in play
+- Smaller paddles, faster ball speed
+- Survival style: first to 5 deaths eliminated
+- Spectator cameras show all players gesturing wildly
+
+### Team Mode (2v2 or 3v3)
+- Players on same side collaborate
+- Shared lives pool
+- Can pass ball between teammates by timing paddles
+- Combined power-ups for team synergy
+
+## Gameplay Mechanics
+
+### Ball Physics
+- **Base Ball**: Classic bouncing with slight speed increase per hit
+- **Trajectory**: Paddle angle + movement direction affects ball spin
+- **Speed Tiers**: 
+  - Level 1: 300px/s (warm-up)
+  - Level 2: 500px/s (intense)
+  - Level 3: 800px/s (expert)
+  - Level 4: 1200px/s (insane)
+- **Spin System**: Swipe hand while hitting = curve ball trajectory
+- **Multi-ball Events**: 2-5 balls appear randomly after 30 seconds
+
+### Paddle Mechanics
+- **Size**: Based on hand distance from camera (Z-depth)
+  - Far = 150px wide, slow response
+  - Mid = 100px wide, balanced
+  - Close = 60px wide, lightning fast
+- **Energy System**: Hold closed fist for 2 seconds = charged paddle
+  - Charged hit = ball temporarily 2x faster toward opponent
+  - Visual: paddle glows brighter, leaves particle trail
+- **Shield Mode**: Open both palms wide = temporary 2x paddle size (3 sec cooldown)
+
+## Power-Up System
+
+### Power-Up Spawning
+- Appear as floating glowing orbs every 15-20 seconds
+- Float near paddle zones (within reach)
+- Grab with pinch gesture
+- Hold max 1 power-up, activate with clap gesture
+- Color-coded for visibility
+
+### Offensive Power-Ups (Red)
+1. **Fireball**: Ball leaves fire trail, 1.5x speed, burns through shields
+2. **Multi-Shot**: Split ball into 3 balls for 10 seconds
+3. **Sniper Shot**: Ultra-fast thin laser ball, hard to see/track
+4. **Gravity Well**: Ball curves toward your paddle for 8 seconds
+5. **EMP Blast**: Opponent's paddle frozen for 2 seconds
+
+### Defensive Power-Ups (Blue)
+1. **Force Field**: Full wall coverage for 5 seconds
+2. **Time Slow**: Ball moves 50% slower for 8 seconds (your view only)
+3. **Magnet Paddle**: Auto-attracts ball within 20px radius
+4. **Ghost Paddle**: Create temporary second paddle for 6 seconds
+5. **Reverser**: Ball bounces back from your wall automatically once
+
+### Chaos Power-Ups (Purple)
+1. **Size Swap**: All paddles swap sizes for 10 seconds
+2. **Invisible Ball**: Ball becomes 80% transparent for 5 seconds
+3. **Gravity Flip**: Ball physics inverted (bounces weirdly)
+4. **Mirror Maze**: Ball creates visual duplicates (only 1 real)
+5. **Blackout**: All arena lights dim, only ball glows
+
+### Ultimate Power-Ups (Gold - Rare)
+1. **Devastator**: Massive energy blast eliminates all balls, spawns new one toward chosen opponent
+2. **Time Stop**: Freeze all balls for 3 seconds, reposition paddle freely
+3. **Wormhole**: Create portal - ball enters yours, exits from opponent's wall
+4. **Supernova**: Ball explodes into 8 balls radiating in all directions
+
+## Multiplayer Connection & Player Discovery
+
+### Connection Modes
+
+#### Local Multi-Device Mode (Primary - Most Viral)
+**Setup Flow**:
+1. **Host Creates Room**:
+   - Click "Create Game" → generates 6-digit room code (e.g., "4X7K2M")
+   - QR code displayed on screen
+   - Host selects game mode (2/4/6/8 players)
+   - Host's device becomes the "game server"
+
+2. **Players Join**:
+   - Other players open game on their devices
+   - Click "Join Game" → enter room code OR scan QR code
+   - Camera permission requested for hand tracking
+   - Each player sees "Waiting for players..." lobby
+
+3. **Lobby System**:
+   - Show all connected players with their camera feeds (small thumbnails)
+   - Each player picks their paddle color (first-come selection)
+   - Host sees "Ready" checkmarks as players calibrate hands
+   - Host clicks "Start Game" when all ready
+
+4. **Arena Assignment**:
+   - 4-player: Players assigned to Top/Right/Bottom/Left based on join order
+   - 6-player: Hexagon sides clockwise from host
+   - 8-player: Octagon sides clockwise from host
+   - Visual diagram shows "You are BLUE paddle on RIGHT side"
+
+**Technical Implementation**:
+```javascript
+// WebRTC peer-to-peer mesh network
+- Host device = signaling server + game state authority
+- PeerJS or simple-peer for WebRTC connections
+- You can run simple node.js server, which I run locally act as bridge
+- Each device streams: hand tracking data (60fps) + camera feed (15fps)
+- Host device runs physics simulation, broadcasts ball position to all
+- Each client renders game based on host's authoritative state
+- Latency compensation: predict local paddle position, sync every 100ms
+```
+
+#### Same-Device Mode (Party Mode)
+**Setup Flow**:
+1. Place tablet/large phone on table
+2. Select "Local Party" mode
+3. Choose player count (2-4 max for single device)
+4. Players sit around device in positions shown on screen
+5. Each player calibrates hands in their zone
+6. Camera detects multiple hand pairs simultaneously
+
+**Technical Implementation**:
+```javascript
+// MediaPipe Hands with multi-hand tracking
+- Detect up to 4 hand pairs (8 hands total)
+- Spatial zones: divide camera view into quadrants
+- Assign hands to players based on screen position
+- Each quadrant = one player's control zone
+- Works best on tablets (10"+ screens)
+```
+
+#### Online Matchmaking (Advanced)
+**Setup Flow**:
+1. **Quick Match**:
+   - Click "Find Game"
+   - Matchmaking based on: skill level, region (ping <100ms)
+   - 15-second countdown while finding players
+   - Auto-start when lobby fills
+
+2. **Ranked Mode**:
+   - ELO-based matchmaking
+   - Rank tiers: Bronze → Silver → Gold → Platinum → Diamond
+   - Seasonal leaderboards
+
+3. **Private Lobbies**:
+   - Share permanent friend code
+   - Create password-protected rooms
+   - Tournament organizer mode (bracket management)
+
+**Technical Implementation**:
+```javascript
+// Backend required (Firebase Realtime Database or similar)
+- Centralized matchmaking queue
+- Room state synchronized via WebSocket
+- STUN/TURN servers for NAT traversal
+- Dedicated relay server for >4 players (reduce peer mesh complexity)
+- Host migration if host disconnects
+```
+
+### Player Discovery UI/UX
+
+**Main Menu Screen**:
+```
+┌─────────────────────────────────────┐
+│     🏓 AIR PONG ARENA 🏓           │
+│                                     │
+│  [🎮 LOCAL PARTY]  2-4 players     │
+│  Same device, around table          │
+│                                     │
+│  [📱 CREATE ROOM]  2-8 players     │
+│  Friends with phones/tablets        │
+│                                     │
+│  [🔍 JOIN ROOM]                    │
+│  Enter 6-digit code                 │
+│                                     │
+│  [⚡ QUICK MATCH]  Online           │
+│  Find random opponents              │
+│                                     │
+│  [🏆 RANKED]  Competitive           │
+│  Climb the leaderboards             │
+└─────────────────────────────────────┘
+```
+
+**Room Creation Screen**:
+```
+┌─────────────────────────────────────┐
+│  YOUR ROOM CODE: 4X7K2M            │
+│  [QR CODE HERE - scan to join]     │
+│                                     │
+│  Players (2/4):                    │
+│  ✅ You (Blue) [Ready]             │
+│  ⏳ Player2 (Red) [Calibrating...]│
+│  ⏳ Waiting...                     │
+│  ⏳ Waiting...                     │
+│                                     │
+│  Game Mode: [4-Player Arena ▼]    │
+│  Arena Theme: [Neon Cyberpunk ▼]  │
+│                                     │
+│  [⚠️ START GAME] (waiting...)      │
+│  [📋 Copy Room Link]               │
+└─────────────────────────────────────┘
+```
+
+**Join Room Screen**:
+```
+┌─────────────────────────────────────┐
+│  JOIN GAME                          │
+│                                     │
+│  Enter Room Code:                   │
+│  [4][X][7][K][2][M]                │
+│                                     │
+│        OR                           │
+│                                     │
+│  [📷 SCAN QR CODE]                 │
+│                                     │
+│  Recent Rooms:                      │
+│  • 4X7K2M - Mike's Game (2/4)      │
+│  • 9PL3NK - Sara's Arena (3/8)     │
+│                                     │
+│  [JOIN] [CANCEL]                   │
+└─────────────────────────────────────┘
+```
+
+### Connection States & Error Handling
+
+**Connection Status Indicators**:
+- 🟢 Green dot = Stable connection (<50ms latency)
+- 🟡 Yellow dot = Moderate lag (50-100ms)
+- 🔴 Red dot = High latency (>100ms) - warning shown
+- ❌ Disconnected = Player kicked, game pauses
+
+**Reconnection Logic**:
+1. Player disconnects → 10-second grace period
+2. Game pauses, show "Player X disconnected, waiting..."
+3. If reconnects within 10s → resume immediately
+4. If timeout → vote to kick or wait (other players decide)
+5. In ranked mode → disconnect = automatic forfeit
+
+**Network Diagnostics Panel** (toggle in settings):
+```
+Ping: 45ms
+Packet Loss: 0.2%
+Your Upload: 1.2 Mbps
+Hand Tracking: 60 FPS
+Game State Sync: ✅ Good
+```
+
+### Proximity/Local Discovery (Bonus Feature)
+
+**Bluetooth/WiFi Direct Discovery** (for nearby devices):
+```javascript
+// "Find Nearby Games" button
+- Scan for devices running Air Pong on same WiFi
+- Show list of discoverable games within 10 meters
+- One-tap join without code entry
+- Perfect for tournaments/events
+```
+
+**Implementation**:
+- mDNS/Bonjour for local network discovery
+  -- this can implement later - there will be some central server which should do this
+- Advertise game as service: `_airpong._tcp.local`
+- Show signal strength (WiFi icon bars)
+- Auto-join if only one game found nearby
+
+### Spectator Mode
+
+**How Spectators Join**:
+1. Enter room code with "(Spectator)" suffix: `4X7K2M-SPEC`
+2. See all player camera feeds in grid view
+3. Watch game from "director's view" (best angle auto-selected)
+4. Cannot interact, but can cheer with emote reactions
+5. Voice chat enabled between spectators
+
+**Streaming Integration**:
+- "Start Broadcast" button → generates Twitch/YouTube stream link
+- Overlay shows all player cameras + game view
+- Chat integration for viewer engagement
+- Delay: 2-second buffer for fair play
+
+---
+
+## Summary: Recommended Default Setup
+
+**For Maximum Viral Potential** → **Local Multi-Device Mode**:
+- Each player uses their own phone/tablet
+- Host creates room, others scan QR code
+- Everyone's face visible on their device camera
+- Recordings show splitscreen of all players gesturing wildly
+- Easy setup: 30 seconds from room creation to game start
+- Social gold: "Look at us all flailing around!" videos
+
+**Technical Priority**:
+1. ✅ Local Multi-Device (WebRTC P2P) - Build this FIRST
+2. ✅ Same-Device Party Mode - Second priority
+3. ⏳ Online Matchmaking - Nice to have, requires backend
+4. ⏳ Spectator/Streaming - Polish feature for later
+
+**Connection Code Best Practices**:
+- Use memorable 6-character alphanumeric (avoid 0/O, 1/I/L confusion)
+- QR code should encode full game URL: `airpong.game/join?room=4X7K2M`
+- Room expires after 1 hour of inactivity
+- Max room lifetime: 4 hours (prevent server clutter)
+
+## Visual Design & Arena Aesthetics
+
+### Arena Themes (Selectable)
+1. **Neon Cyberpunk** (default)
+   - Black void background with neon grid floor
+   - Electric blue/pink paddles with particle trails
+   - Tron-style light ribbons marking walls
+   - Synth-wave color palette
+
+2. **Retro Arcade**
+   - Pixelated 8-bit style overlays
+   - Classic green monochrome option
+   - Scanline effects
+   - Arcade cabinet border frame
+
+3. **Cosmic Arena**
+   - Starfield background
+   - Glowing plasma paddles
+   - Nebula clouds drifting behind
+   - Aurora effects on hits
+
+4. **Matrix Code**
+   - Falling green code rain
+   - Digital glitch effects
+   - Black/green color scheme
+   - Numbers fragment on ball impact
+
+5. **Vaporwave Sunset**
+   - Purple/pink gradient sky
+   - Grid floor with palm trees
+   - Sunset horizon line
+   - Dreamy particle effects
+
+### Particle Effects
+- **Paddle Trail**: Leave glowing energy trail when moving fast
+- **Impact Burst**: Explosion of colored particles on ball hit
+- **Power-Up Aura**: Floating particles orbit active power-up orbs
+- **Charge Effect**: Lightning crackles around fist when charging
+- **Speed Lines**: Motion blur effect when ball exceeds 1000px/s
+- **Wall Impact**: Ripple effect when ball hits wall edges
+
+### UI Design (Minimal & Clean)
+**Heads-Up Display**:
+- **Top**: Score display (large, glowing numbers)
+- **Corner Icons**: Active power-up indicator
+- **Side Bars**: Player health/lives (3-5 hearts per player)
+- **Center**: Round timer (60-90 seconds per round)
+- **Bottom Edge**: Player names in their paddle color
+
+**Camera Feed Overlay**:
+- Full-screen camera view with 8% opacity
+- Hand tracking skeleton at 15% opacity (shows detected joints)
+- Active hand highlight: glowing outline when paddle active
+- Debug panel (toggle-able): Bottom-right, 25% opacity
+  - FPS counter
+  - Hand detection confidence %
+  - Latency display (ms)
+  - Active gesture labels
+
+**Gesture Tutorial Overlay**:
+- Appears for first-time players
+- Animated hand icons showing required gestures
+- "Try it now" prompts with visual feedback
+- Fades after successful gesture detection
+
+## Audio Design
+
+### Sound Effects
+- **Paddle Hit**: Satisfying "pock" with pitch variation based on speed
+- **Wall Bounce**: Deep bass thump
+- **Power-Up Grab**: Magical chime sound
+- **Power-Up Activate**: Whoosh + specific effect sound
+- **Score Point**: Triumphant sting
+- **Ball Speed Tier Up**: Rising synthesizer note
+- **Elimination**: Dramatic explosion sound
+- **UI Interactions**: Subtle beeps and clicks
+
+### Dynamic Music System
+- **Base Track**: Pumping electronic beat (120-140 BPM)
+- **Intensity Layers**: Add synth layers as game speeds up
+- **Tension Builds**: Music tempo increases with ball speed
+- **Clutch Moments**: Bass drop when score is tied at match point
+- **Victory Theme**: Explosive celebration track (15 seconds)
+
+### Microphone Integration
+- **Sound Visualization**: Background particles pulse to ambient sound/music
+- **Crowd Noise**: Louder sounds = stronger particle reactions
+- **Voice Commands** (optional):
+  - "BOOST!" = temporary paddle speed increase
+  - "SHIELD!" = activate defensive mode
+  - Shouting = paddle size pulse (for hype moments)
+
+## Game Progression & Meta Systems
+
+### Match Structure
+**Quick Play** (Best of 3):
+- First to 7 points wins
+- 60-second round limit
+- Tie-breaker: Sudden death (next point wins)
+
+**Tournament Mode** (4-8 players):
+- Bracket elimination
+- Best of 5 rounds
+- Winner faces new challenger
+- Spectators see all hands via split-screen
+
+**Survival Mode** (6-8 players):
+- All players start with 5 lives
+- Last player standing wins
+- Ball speed increases every 30 seconds
+- No power-ups, pure skill
+
+**Boss Battle** (Co-op):
+- 2-4 players vs AI-controlled "Boss Paddle"
+- Boss has special attacks and patterns
+- Defeat boss within time limit
+- Unlocks special arena themes
+
+### Difficulty Levels
+1. **Casual**: Slower ball, larger paddles, frequent power-ups
+2. **Competitive**: Balanced gameplay, moderate speed
+3. **Pro**: Fast ball, small paddles, rare power-ups
+4. **Insane**: Multiple balls, instant speed-ups, chaos mode
+
+### Unlockables & Customization
+- **Paddle Skins**: Unlock new visual effects (fire, ice, lightning, plasma)
+- **Arena Themes**: Win matches to unlock new visual environments
+- **Particle Effects**: Customize your paddle trail style
+- **Emotes**: Hand gesture-triggered celebrations (peace sign, thumbs up, wave)
+- **Stats Tracking**: Wins, accuracy %, fastest reaction time, power-ups used
+
+### Leaderboards
+- Global rankings by wins
+- Regional competition
+- Friends-only leaderboards
+- Weekly challenges (e.g., "Win without power-ups")
+
+## Technical Requirements
+
+### Performance Optimization
+- Target 60 FPS minimum on mid-range devices
+- Adaptive quality settings based on device capability
+- Reduce particle count on lower-end hardware
+- Efficient hand tracking algorithm (max 50ms latency)
+
+### Network/Multiplayer (if online)
+- WebRTC for low-latency peer-to-peer
+- Rollback netcode for smooth online play
+- Max 100ms acceptable latency between players
+- Host migration for disconnections
+- Spectator mode with 2-second delay
+
+### Accessibility Options
+- Adjustable hand tracking sensitivity
+- Left-hand/right-hand only mode
+- Color-blind friendly palettes
+- High contrast mode
+- Adjustable UI scale
+- Subtitle/visual indicators for audio cues
+
+## Social & Viral Features
+
+### Replay System
+- Auto-record last 30 seconds of epic moments
+- "Instant Replay" button after amazing plays
+- Export clips with overlaid player camera feeds
+- Share directly to social media
+
+### Spectator Appeal
+- Picture-in-picture showing player hands gesturing
+- Split-screen view of all players' cameras
+- Reaction cam highlights during intense moments
+- "Chaotic Hand Dance" compilations encourage sharing
+
+### Challenges & Events
+- Daily challenges: "Win using only charged shots"
+- Weekend tournaments with special rewards
+- Seasonal events with themed arenas
+- Community-created tournament brackets
+
+## Implementation Notes for AI Agent
+
+### Tech Stack
+```
+// Core
+- React 18 (for concurrent features)
+- Vite (build tool)
+- React Three Fiber (3D rendering)
+- Drei (R3F helpers - super useful)
+
+// Hand Tracking
+- @mediapipe/hands (official Google package)
+- @tensorflow/tfjs + @tensorflow-models/handpose (alternative)
+
+// Multiplayer
+- PeerJS (WebRTC wrapper - simple P2P)
+- Socket.io (for signaling server)
+
+// State Management
+- Zustand (lightweight, perfect for game state)
+- or Jotai (atoms, great for distributed state)
+
+// UI Components
+- Tailwind CSS (rapid styling)
+- Framer Motion (smooth animations)
+- react-qr-code (QR generation)
+
+// Audio
+- Howler.js (robust audio management)
+- Tone.js (if you want music reactivity)
+```
+
+### First implement 1v1 connected sessions, then we will focus Party mode and later 4-8 Player.
+
+### Signaling server
+```
+# Phase 1: Prototype 
+- Use PeerJS cloud
+- Build core gameplay
+- Test with friends locally
+
+# Phase 2: Polish 
+- Deploy simple PeerJS server to Railway (free)
+- Switch config to self-hosted
+- Keep cloud as fallback
+
+# Phase 3: Scale (if game gets popular)
+- Add TURN servers for NAT traversal
+- Consider regional servers (US, EU, Asia)
+- Monitor uptime with UptimeRobot (free)
+```
+
+### Assets and Audio
+```
+you can generate placeholder visuals/UI capabilities
+```
+
+### Three.js Scene Setup
+```javascript
+// Core components needed:
+- PerspectiveCamera for 3D arena view
+- WebGLRenderer with alpha channel for camera overlay
+- Scene with ambient + directional lighting for neon glow
+- Post-processing: BloomPass for glow effects, UnrealBloomPass for intense neon
+```
+
+### Hand Tracking Integration
+```javascript
+// Use MediaPipe Hands or TensorFlow HandPose
+- Initialize with camera feed (getUserMedia)
+- Track landmark points for palm center, fingertips
+- Calculate hand velocity for paddle movement prediction
+- Implement gesture recognition state machine
+- Smooth tracking data with Kalman filter or moving average
+```
+
+### Physics Engine
+```javascript
+// Ball physics
+- Use simple 2D vector math for speed
+- Reflection angle = incident angle ± paddle angle influence
+- Collision detection: AABB for paddles, point-in-rect for ball
+- Speed curve: exponential growth with cap at max speed
+```
+
+### State Management
+```React Components + Vite
+// Game states
+- INIT → CALIBRATION → READY → PLAYING → SCORING → END
+- Track: player positions, ball position/velocity, active power-ups, scores
+- game loop (60 FPS target)
+- React components (<Canvas>, <mesh>)
+```
+
+### Responsive Design
+- Support landscape orientation (primary)
+- Portrait mode for 2-player face-off (phones)
+- Tablet optimization for 4-player around-table mode
+- Desktop with webcam support
+
+---
+
+## Final Notes
+This game succeeds by making players look RIDICULOUS while having a BLAST. The viral potential comes from:
+1. Visible physical exhaustion (players sweating, arms burning)
+2. Hilarious gesture moments caught on camera
+3. Intense competitive drama with simple rules
+4. "One more round" addiction from quick 60-second matches
+5. Social shareability (replays show both game + player reactions)
+
+The hand-tracking controls make it feel like you're PHYSICALLY IN THE GAME, not just controlling it. Your hands ARE the paddles. When you see yourself on camera desperately reaching for a save, that visceral connection creates memorable moments worth sharing.
