@@ -295,9 +295,9 @@ export const Calibration: React.FC = () => {
                        Logic Update:
                        Check against visualX to match user perception.
                        User moves physically Left -> Screen Left -> visualX < 0.25
-                       Range: 0.25 +/- 0.1 -> 0.15 to 0.35
+                       Range: 0.25 +/- 0.2 -> 0.05 to 0.45
                     */
-                    const inLeftRange = Math.abs(visualX - 0.25) < 0.15; // Relaxed Range (was 0.1)
+                    const inLeftRange = Math.abs(visualX - 0.25) < 0.20; // Increased tolerance
 
                     if (inLeftRange) { // Left 1/4
                         if (gesture === 'fist') {
@@ -358,9 +358,9 @@ export const Calibration: React.FC = () => {
                       Logic Update:
                       Check against visualX.
                       User moves physically Right -> Screen Right -> visualX > 0.75
-                      Range: 0.75 +/- 0.1 -> 0.65 to 0.85
+                      Range: 0.75 +/- 0.2 -> 0.55 to 0.95
                    */
-                    const inRightRange = Math.abs(visualX - 0.75) < 0.15; // Relaxed Range
+                    const inRightRange = Math.abs(visualX - 0.75) < 0.20; // Increased tolerance
 
                     if (inRightRange) {
                         if (gesture === 'fist') {
@@ -611,17 +611,33 @@ export const Calibration: React.FC = () => {
                             {/* PROGRESS BAR - MOVED AROUND MAIN ICON */
                                 // Note: CircularProgress now handles the background track itself (stroke="rgba(255,255,255,0.2)")
                             }
-                            {/* PROGRESS BAR - ONLY WHEN ACTIVELY PROGRESSING */}
-                            {!showHandHint && progress > 0 && (
-                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[140px] h-[140px] flex items-center justify-center z-10">
-                                    <CircularProgress
-                                        progress={progress}
-                                        size={140}
-                                        stroke={10}
-                                        color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
-                                    />
-                                </div>
-                            )}
+                            {/* PROGRESS BAR - DYNAMICALLY POSITIONED */}
+                            {!showHandHint && progress > 0 && (() => {
+                                // Determine position based on step
+                                let positionStyle = {};
+                                if (step === 'LEFT_MOVE') {
+                                    positionStyle = { left: '25%', top: '50%' };
+                                } else if (step === 'RIGHT_MOVE') {
+                                    positionStyle = { left: '75%', top: '50%' };
+                                } else {
+                                    // Center position for all other steps
+                                    positionStyle = { left: '50%', top: '50%' };
+                                }
+
+                                return (
+                                    <div
+                                        className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
+                                        style={positionStyle}
+                                    >
+                                        <CircularProgress
+                                            progress={progress}
+                                            size={140}
+                                            stroke={10}
+                                            color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
+                                        />
+                                    </div>
+                                );
+                            })()}
 
                             {/* Icons (Context Aware) */}
                             <div className={`transition-colors duration-300 text-8xl scale-x-[-1] opacity-50 ${showHandHint ? 'text-neon-pink animate-pulse' :
@@ -662,10 +678,7 @@ export const Calibration: React.FC = () => {
                             {/* Target Icon (Solid) at Midpoint (Left 1/4) */}
                             <div className="absolute left-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse -translate-x-full pr-8">
                                 <div className="relative">
-                                    {/* Background Circle */}
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white/10 w-24 h-24" />
-                                    <CircularProgress progress={progress} color="#FFFF00" size={100} />
-                                    <div className="text-6xl text-neon-yellow scale-x-[-1] relative">✊</div>
+                                    <div className="text-8xl text-neon-yellow scale-x-[-1] relative">✊</div>
                                 </div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
                             </div>
@@ -681,9 +694,7 @@ export const Calibration: React.FC = () => {
                             {/* Target Icon (Solid) at Midpoint (Right 1/4) */}
                             <div className="absolute right-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse translate-x-full pl-8">
                                 <div className="relative">
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white/10 w-24 h-24" />
-                                    <CircularProgress progress={progress} color="#FFFF00" size={100} />
-                                    <div className="text-6xl text-neon-yellow scale-x-[-1] relative">✊</div>
+                                    <div className="text-8xl text-neon-yellow scale-x-[-1] relative">✊</div>
                                 </div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
                             </div>
