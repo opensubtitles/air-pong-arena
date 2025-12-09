@@ -44,11 +44,16 @@ const CircularProgress = ({ progress, color = '#00F3FF', size = 112, stroke = 4 
 export const Calibration: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [step, setStep] = useState<CalibStep>('INIT');
-    const [msg, setMsg] = useState('Initializing Environment...'); // Updated initial text
+    const [msg, setMsg] = useState('Initializing Environment...');
     const [subMsg, setSubMsg] = useState('');
     const [progress, setProgress] = useState(0);
-    const [status, setStatus] = useState<'RED' | 'ORANGE' | 'GREEN'>('RED'); // Traffic Light
-    const [showHandHint, setShowHandHint] = useState(false); // No Hands detected
+    const [status, setStatus] = useState<'RED' | 'ORANGE' | 'GREEN'>('RED');
+
+    // Camera State
+    const [cameraReady, setCameraReady] = useState(false);
+    const [cameraError, setCameraError] = useState<string | null>(null);
+    const [showHandHint, setShowHandHint] = useState(false);
+
     const setPhase = useGameStore((state) => state.setPhase);
 
     // State for hold timers
@@ -58,9 +63,11 @@ export const Calibration: React.FC = () => {
     // Logic Refs
     const msgTimer = useRef(0); // For debouncing messages
     const graceTimer = useRef(0); // For forgiving hold errors
+    const cameraInitTimer = useRef<number | null>(null);
 
     // Ghost Paddle State
     const [ghostX, setGhostX] = useState(0.5); // 0-1 range
+    const [ghostY, setGhostY] = useState(0.5);
 
     const getProgress = () => {
         const steps: CalibStep[] = [
@@ -80,13 +87,27 @@ export const Calibration: React.FC = () => {
                 if (!handTracking.debugInfo.initialized) {
                     await handTracking.initialize();
                 }
-                setStep('DISTANCE_CHECK');
-                setMsg('Show your hand ✋');
+
                 if (videoRef.current) {
                     handTracking.startWebcam(videoRef.current);
                 }
-            } catch (e) {
-                setMsg('Error: ' + e);
+
+                // Check for camera readiness
+                const checkCamera = setInterval(() => {
+                    if (videoRef.current && videoRef.current.readyState === 4) {
+                        clearInterval(checkCamera);
+                        // Delay showing "Show Hand" by 500ms
+                        setTimeout(() => {
+                            setCameraReady(true);
+                            setStep('DISTANCE_CHECK');
+                            setMsg('Show your hand ✋');
+                        }, 500);
+                    }
+                }, 100);
+
+            } catch (e: any) {
+                setMsg('Camera Error');
+                setCameraError('Camera access denied or missing. Please enable camera access.');
             }
         };
         init();
@@ -95,7 +116,7 @@ export const Calibration: React.FC = () => {
     // ... (rest of the file until the overlay logic)
 
     // Inside the render return, locate the overlay div
-    /* 
+    /*
        Updated Logic:
        - Scale: 3.0 (20% bigger than 2.5)
        - Hand Orientation: scale-x-[-1] to flip to Right Hand
@@ -110,6 +131,11 @@ export const Calibration: React.FC = () => {
         const loop = (time: number) => {
             const dt = time - lastTime.current;
             lastTime.current = time;
+
+            if (!cameraReady) {
+                frameId = requestAnimationFrame(loop);
+                return;
+            }
 
             // Helper for debounced messages
             const updateMsg = (m: string, s: string) => {
@@ -126,12 +152,19 @@ export const Calibration: React.FC = () => {
             const info = handTracking.debugInfo;
             const hands = info.handsDetected;
             const x = info.indexFingerX; // 0-1
+            const y = info.indexFingerY; // Raw Y (0 top - 1 bottom)
             const size = info.handSize;  // ~0.1 to ~0.3 usually
             const gesture = info.gesture;
 
             // Mirror X for display (This is what the user SEES as their cursor)
             const visualX = 1 - x;
             setGhostX(visualX);
+            setGhostY(y); // Y is usually not mirrored vertically for display unless CSS does it?
+            // CSS `scale-x-[-1]` handles X. Y should be standard.
+
+            // Distance from Center (0.5, 0.5)
+            // Note: visualX matches screen logic (0 left, 1 right).
+            const distFromCenter = Math.sqrt(Math.pow(visualX - 0.5, 2) + Math.pow(y - 0.5, 2));
 
             // Global Hand Count Check
             if (hands === 0 && step !== 'INIT') {
@@ -161,36 +194,33 @@ export const Calibration: React.FC = () => {
 
             switch (step) {
                 case 'DISTANCE_CHECK':
-                    // Need a reasonable size range. 
+                    // Need a reasonable size range.
                     // 0.05 is very far, 0.4 is very close.
                     if (size < 0.1) {
-                        updateMsg('Too Far! Move closer 🕵️', `Size: ${(size * 100).toFixed(0)}% (Target > 10%)`);
+                        updateMsg('Too Far! Move closer 🕵️', `Size: ${(size * 100).toFixed(0)}%`);
                         currentStatus = 'RED';
                     } else if (size > 0.35) {
-                        updateMsg('Too Close! Move back 🔙', `Size: ${(size * 100).toFixed(0)}% (Target < 35%)`);
+                        updateMsg('Too Close! Move back 🔙', `Size: ${(size * 100).toFixed(0)}%`);
                         currentStatus = 'RED';
                     } else {
                         setStep('CENTER_OPEN'); // New step
                         setMsg('Perfect! Center your hand ✋');
                         setSubMsg('Keep it OPEN');
                         holdTimer.current = 0;
-                        graceTimer.current = 0;
                         currentStatus = 'GREEN';
                     }
                     break;
 
                 case 'CENTER_OPEN':
-                    const isCenteredOpen = Math.abs(x - 0.5) < 0.15;
-
+                    /* Radial Check: Must be within 0.15 of center */
                     // Logic:
                     // 1. If Open Palm detected ANYWHERE -> ORANGE (Guide to Center)
                     // 2. If Open Palm AND Centered -> GREEN (Hold)
                     // 3. Else -> RED (Show Hand)
 
                     if (gesture === 'open_palm') {
-                        if (isCenteredOpen) {
+                        if (distFromCenter < 0.15) {
                             holdTimer.current += dt;
-                            graceTimer.current = 0;
                             currentStatus = 'GREEN';
 
                             // 2000ms hold
@@ -208,28 +238,23 @@ export const Calibration: React.FC = () => {
                         } else {
                             // Open Palm but not centered
                             currentStatus = 'ORANGE';
-                            const dir = x < 0.5 ? 'Move RIGHT ➡️' : '⬅️ Move LEFT';
-                            updateMsg(dir, 'Center your hand');
+                            updateMsg('Move to CENTER +', `Distance: ${(distFromCenter * 100).toFixed(0)}%`);
                             holdTimer.current = 0;
                             setProgress(0);
                         }
                     } else {
                         // Not showing open palm
                         currentStatus = 'RED';
-                        updateMsg('Show Open Hand ✋', 'In the center');
+                        updateMsg('Show Open Hand ✋', '');
                         holdTimer.current = 0;
                         setProgress(0);
                     }
                     break;
 
                 case 'CENTER_FIST':
-                    const isCentered = Math.abs(x - 0.5) < 0.15; // Target
-                    const isFist = gesture === 'fist';
-
-                    if (isCentered) {
-                        if (isFist) {
+                    if (distFromCenter < 0.15) {
+                        if (gesture === 'fist') {
                             holdTimer.current += dt;
-                            graceTimer.current = 0; // Reset grace on success
                             currentStatus = 'GREEN';
 
                             const p = Math.min((holdTimer.current / 2000) * 100, 100);
@@ -249,20 +274,12 @@ export const Calibration: React.FC = () => {
                             // Special hint for "Almost fist" vs "Open"
                             if (gesture === 'open_palm') updateMsg('Close your hand! ✊', 'Make a tight fist');
                             else updateMsg('Squeeze Tighter! ✊', 'Knuckles visible?');
-
-                            // In failure state, check grace period
-                            if (graceTimer.current < 300) {
-                                graceTimer.current += dt;
-                                // Maintain green status during grace? maybe orange
-                                currentStatus = 'ORANGE';
-                            } else {
-                                holdTimer.current = 0;
-                                setProgress(0);
-                            }
+                            holdTimer.current = 0;
+                            setProgress(0);
                         }
                     } else {
                         currentStatus = 'RED';
-                        updateMsg('Move to CENTER', '');
+                        updateMsg('Move to CENTER +', '');
                         holdTimer.current = 0;
                         setProgress(0);
                     }
@@ -270,12 +287,15 @@ export const Calibration: React.FC = () => {
 
                 // ... Update other cases to set currentStatus similarly
                 case 'LEFT_MOVE':
-                    /* 
-                       Logic Update: 
+                    /*
+                       Logic Update:
                        Check against visualX to match user perception.
                        User moves physically Left -> Screen Left -> visualX < 0.25
+                       Range: 0.25 +/- 0.1 -> 0.15 to 0.35
                     */
-                    if (visualX < 0.25) { // Left 1/4
+                    const inLeftRange = Math.abs(visualX - 0.25) < 0.1;
+
+                    if (inLeftRange) { // Left 1/4
                         if (gesture === 'fist') {
                             holdTimer.current += dt;
                             const p = Math.min((holdTimer.current / 1000) * 100, 100);
@@ -304,17 +324,17 @@ export const Calibration: React.FC = () => {
                     }
                     break;
 
-                // Simplification for brevity: assume other steps logic holds from previous edit, 
+                // Simplification for brevity: assume other steps logic holds from previous edit,
                 // but need to inject status updating.
                 // Since replace_file_content replaces the BLOCK, I must include the rest or break the file.
                 // I will include the rest of the cases with status updates.
 
                 case 'CENTER_RETURN_1':
-                    // Check Center (0.5 +/- 0.15)
-                    if (Math.abs(visualX - 0.5) < 0.15) {
+                    // Quick center check (Radial)
+                    if (distFromCenter < 0.2) { // Slightly more forgiving than strict center
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
-                        if (holdTimer.current > 1000) { // Fast center check
+                        if (holdTimer.current > 500) { // Fast
                             setStep('RIGHT_MOVE');
                             setMsg('Move RIGHT ➡️');
                             setSubMsg('Keep Fist Closed');
@@ -330,12 +350,15 @@ export const Calibration: React.FC = () => {
                     break;
 
                 case 'RIGHT_MOVE':
-                    /* 
-                      Logic Update: 
+                    /*
+                      Logic Update:
                       Check against visualX.
                       User moves physically Right -> Screen Right -> visualX > 0.75
+                      Range: 0.75 +/- 0.1 -> 0.65 to 0.85
                    */
-                    if (visualX > 0.75) {
+                    const inRightRange = Math.abs(visualX - 0.75) < 0.1;
+
+                    if (inRightRange) {
                         if (gesture === 'fist') {
                             holdTimer.current += dt;
                             const p = Math.min((holdTimer.current / 1000) * 100, 100);
@@ -364,10 +387,10 @@ export const Calibration: React.FC = () => {
                     break;
 
                 case 'CENTER_RETURN_2':
-                    if (Math.abs(visualX - 0.5) < 0.15) {
+                    if (distFromCenter < 0.2) {
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
-                        if (holdTimer.current > 1000) {
+                        if (holdTimer.current > 500) {
                             setStep('BOOST_TEACH');
                             setMsg('OPEN PALM to Boost! ✋');
                             setSubMsg('Try it now!');
@@ -385,7 +408,6 @@ export const Calibration: React.FC = () => {
                 case 'BOOST_TEACH':
                     if (gesture === 'open_palm') {
                         holdTimer.current += dt;
-                        graceTimer.current = 0;
                         currentStatus = 'GREEN';
 
                         const p = Math.min((holdTimer.current / 1000) * 100, 100);
@@ -399,12 +421,8 @@ export const Calibration: React.FC = () => {
                         }
                     } else {
                         currentStatus = 'ORANGE'; // Gesture wrong
-                        if (graceTimer.current < 300) {
-                            graceTimer.current += dt;
-                        } else {
-                            holdTimer.current = 0;
-                            setProgress(0);
-                        }
+                        holdTimer.current = 0;
+                        setProgress(0);
                     }
                     break;
 
@@ -423,11 +441,20 @@ export const Calibration: React.FC = () => {
 
         frameId = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(frameId);
-    }, [step, setPhase]);
+    }, [step, setPhase, cameraReady]);
+
+    const handsDetected = () => handTracking.debugInfo.handsDetected;
 
     return (
         <div className="absolute inset-0 z-50 bg-black/95 flex flex-col items-center justify-center text-white">
             <h2 className="text-4xl mb-2 text-neon-blue font-bold tracking-wider">DOJO TRAINING</h2>
+
+            {/* Error Message */}
+            {cameraError && (
+                <div className="absolute top-10 bg-red-600/80 p-4 rounded text-white font-bold animate-pulse">
+                    {cameraError}
+                </div>
+            )}
 
             <div className="h-2 w-96 bg-gray-800 rounded mb-6 overflow-hidden">
                 <div
@@ -451,18 +478,17 @@ export const Calibration: React.FC = () => {
 
                 {/* Overlays */}
                 <div className="absolute inset-0 pointer-events-none">
-                    {/* Ghost Paddle */}
-                    {/* Show only AFTER initial calibration (CENTER_FIST) */}
-                    {(step === 'LEFT_MOVE' || step === 'RIGHT_MOVE' || step === 'CENTER_RETURN_1' || step === 'CENTER_RETURN_2' || step === 'BOOST_TEACH' || step === 'FINAL_CONFIRM') && (
+                    {/* Ghost Paddle / Marker */}
+                    {(step !== 'INIT' && cameraReady) && (
                         <div
-                            className="absolute bottom-10 w-32 h-4 bg-neon-blue/40 border border-neon-blue rounded shadow-[0_0_20px_rgba(0,243,255,0.5)] transition-transform duration-75"
+                            className="absolute bg-neon-blue/80 w-4 h-4 rounded-full shadow-[0_0_10px_#00F3FF]"
                             style={{
                                 left: `${ghostX * 100}%`,
-                                transform: 'translateX(-50%)'
+                                top: `${ghostY * 100}%`,
+                                transform: 'translate(-50%, -50%)',
+                                opacity: handsDetected() > 0 ? 1 : 0
                             }}
-                        >
-                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-sm text-neon-blue font-mono">YOU</div>
-                        </div>
+                        />
                     )}
 
                     {/* Unified Central overlay for Hand Hint + Calibration Steps */}
@@ -470,7 +496,7 @@ export const Calibration: React.FC = () => {
                         ${showHandHint ? 'bg-black/60 z-50' : ''}
                     `}>
                         <div className={`relative flex flex-col items-center transition-transform duration-500
-                            ${showHandHint ? 'scale-[3.0]' : 'scale-100'} 
+                            ${showHandHint ? 'scale-[3.0]' : 'scale-100'}
                         `}>
                             {/* Circular Progress (Shared CENTER) */}
                             {((step === 'CENTER_OPEN' || step === 'CENTER_FIST') && !showHandHint) && (
@@ -482,14 +508,11 @@ export const Calibration: React.FC = () => {
 
                             {/* Icons (Context Aware) */}
                             <div className={`transition-colors duration-300 text-6xl scale-x-[-1] ${showHandHint ? 'text-neon-pink animate-pulse' :
-                                status === 'GREEN' ? 'text-neon-green' : 'text-white'
+                                    status === 'GREEN' ? 'text-neon-green' : 'text-white'
                                 }`}>
-                                {/* Logic: 
-                                    If Show Hand Hint -> Show EXPECTED Icon for that step.
-                                    If Center Step -> Show EXPECTED Icon.
-                                    If Distance Check -> Show Open Hand.
-                                */}
                                 {(() => {
+                                    if (!cameraReady) return null;
+
                                     // Determine expected icon type
                                     const useFist = step === 'CENTER_FIST' || step === 'LEFT_MOVE' || step === 'RIGHT_MOVE' || step.includes('CENTER_RETURN') || step === 'FINAL_CONFIRM';
                                     const icon = useFist ? '✊' : '✋';
@@ -503,7 +526,7 @@ export const Calibration: React.FC = () => {
                             </div>
 
                             {/* Text for Show Hand Hint */}
-                            {showHandHint && (
+                            {showHandHint && cameraReady && (
                                 <p className="text-xs mt-4 font-bold text-neon-pink tracking-widest uppercase whitespace-nowrap">Show Hand</p>
                             )}
                         </div>

@@ -15,6 +15,7 @@ class HandTrackingService {
         initialized: false,
         handsDetected: 0,
         indexFingerX: 0,
+        indexFingerY: 0,
         fps: 0,
         lastProcessTime: 0,
         gesture: 'None',
@@ -81,6 +82,7 @@ class HandTrackingService {
                 const arenaX = (0.5 - indexFinger.x) * 20;
 
                 this.debugInfo.indexFingerX = indexFinger.x; // Raw X
+                this.debugInfo.indexFingerY = indexFinger.y; // Raw Y
 
                 // Calculate Scale/Distance (Wrist 0 to Middle MCP 9)
                 const wrist = landmarks[0];
