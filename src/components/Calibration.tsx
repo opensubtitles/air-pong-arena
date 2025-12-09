@@ -225,14 +225,14 @@ export const Calibration: React.FC = () => {
                             holdTimer.current += dt;
                             currentStatus = 'GREEN';
 
-                            // 1000ms hold (was 2000ms)
-                            const p = Math.min((holdTimer.current / 1000) * 100, 100);
+                            // 2000ms hold (2 seconds)
+                            const p = Math.min((holdTimer.current / 2000) * 100, 100);
                             setProgress(p);
                             // Direct feedback
                             setMsg('Hold Open... ✋');
-                            setSubMsg(`${Math.ceil((1000 - holdTimer.current) / 100)}%`);
+                            setSubMsg(`${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
 
-                            if (holdTimer.current > 1000) {
+                            if (holdTimer.current > 2000) {
                                 setStep('CENTER_FIST');
                                 setMsg('Now CLOSE your hand ✊');
                                 setSubMsg('Make a fist');
@@ -264,12 +264,12 @@ export const Calibration: React.FC = () => {
                             holdTimer.current += dt;
                             currentStatus = 'GREEN';
 
-                            const p = Math.min((holdTimer.current / 1000) * 100, 100);
+                            const p = Math.min((holdTimer.current / 2000) * 100, 100);
                             setProgress(p);
                             setMsg('Hold Steady... ✊');
-                            setSubMsg(`${Math.ceil((1000 - holdTimer.current) / 100)}%`);
+                            setSubMsg(`${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
 
-                            if (holdTimer.current > 1000) {
+                            if (holdTimer.current > 2000) {
                                 setStep('LEFT_MOVE');
                                 setMsg('Move LEFT ⬅️');
                                 setSubMsg('Keep Fist Closed');
@@ -630,7 +630,7 @@ export const Calibration: React.FC = () => {
                             )}
 
                             {/* Icons (Context Aware) */}
-                            <div className={`transition-colors duration-300 text-6xl scale-x-[-1] opacity-50 ${showHandHint ? 'text-neon-pink animate-pulse' :
+                            <div className={`transition-colors duration-300 text-8xl scale-x-[-1] opacity-50 ${showHandHint ? 'text-neon-pink animate-pulse' :
                                 status === 'GREEN' ? 'text-neon-green' : 'text-white'
                                 }`}>
                                 {(() => {
