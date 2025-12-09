@@ -578,19 +578,21 @@ export const Calibration: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Ghost Paddle - Shows from CENTER_FIST onwards */}
-                    {(step !== 'INIT' && step !== 'DISTANCE_CHECK' && step !== 'CENTER_OPEN' && cameraReady && handsDetected() > 0) && (
-                        <div
-                            className="absolute z-20 pointer-events-none"
-                            style={{
-                                left: `${ghostX * 100}%`,
-                                top: `${ghostY * 100}%`,
-                                transform: 'translate(-50%, -50%)'
-                            }}
-                        >
-                            <div className="w-6 h-6 bg-neon-blue/80 border-2 border-white rounded-full shadow-[0_0_15px_#00F3FF]" />
-                        </div>
-                    )}
+                    {/* Ghost Paddle / Marker & ATTACHED PROGRESS - REMOVED AS REQUESTED */
+                        // User requested "remove circle from index finger" -> Hiding the Ghost Cursor
+                        /*(step !== 'INIT' && cameraReady && handsDetected() > 0) && (
+                           <div
+                               className="absolute z-20 pointer-events-none"
+                               style={{
+                                   left: `${ghostX * 100}%`,
+                                   top: `${ghostY * 100}%`,
+                                   transform: 'translate(-50%, -50%)'
+                               }}
+                           >
+                                <div className="w-6 h-6 bg-neon-blue/80 border-2 border-white rounded-full shadow-[0_0_15px_#00F3FF]" />
+                           </div>
+                       )*/
+                    }
 
                     {/* Unified Central overlay for Hand Hint + Calibration Steps */}
                     <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-out
