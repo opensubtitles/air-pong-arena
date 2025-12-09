@@ -16,7 +16,7 @@ type CalibStep =
     | 'FINAL_CONFIRM'
     | 'COMPLETE';
 
-// Helper Component for Circular Progress - CSS-based for reliability
+// Helper Component for Circular Progress - Ring-only stroke
 const CircularProgress = ({ progress, color = '#00F3FF', size = 112, stroke = 4 }: { progress: number, color?: string, size?: number, stroke?: number }) => {
     const percentage = Math.max(0, Math.min(progress, 100));
 
@@ -27,15 +27,11 @@ const CircularProgress = ({ progress, color = '#00F3FF', size = 112, stroke = 4 
                 width: size,
                 height: size,
                 background: `conic-gradient(${color} ${percentage * 3.6}deg, rgba(255,255,255,0.3) ${percentage * 3.6}deg)`,
-                padding: stroke,
+                WebkitMaskImage: `radial-gradient(transparent ${size / 2 - stroke}px, black ${size / 2 - stroke}px)`,
+                maskImage: `radial-gradient(transparent ${size / 2 - stroke}px, black ${size / 2 - stroke}px)`,
                 transition: 'background 0.1s linear'
             }}
-        >
-            <div
-                className="w-full h-full rounded-full bg-black"
-                style={{ opacity: 0.9 }}
-            />
-        </div>
+        />
     );
 };
 
