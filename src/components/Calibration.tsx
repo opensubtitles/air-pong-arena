@@ -555,15 +555,18 @@ export const Calibration: React.FC = () => {
                             />
                         );
                     })}
-                    {skeleton.map((p, i) => (
-                        <circle
-                            key={i}
-                            cx={p.x * 100 + '%'}
-                            cy={p.y * 100 + '%'}
-                            r={i % 4 === 0 ? 6 : 4}
-                            fill={fingerColors[i] || '#FFF'}
-                        />
-                    ))}
+                    {skeleton.map((p, i) => {
+                        if (i === 8) return null; // Skip Index Tip (covered by Ghost Cursor)
+                        return (
+                            <circle
+                                key={i}
+                                cx={p.x * 100 + '%'}
+                                cy={p.y * 100 + '%'}
+                                r={i % 4 === 0 ? 6 : 4}
+                                fill={fingerColors[i] || '#FFF'}
+                            />
+                        );
+                    })}
                 </svg>
 
                 {/* Overlays */}
