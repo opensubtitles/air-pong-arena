@@ -32,11 +32,19 @@ class HandTrackingService {
     }
 
     async initialize() {
+        console.log('initialize() called - checking state:', {
+            initialized: this.debugInfo.initialized,
+            hasLandmarker: !!this.handLandmarker
+        });
+
         // Prevent double initialization
         if (this.debugInfo.initialized || this.handLandmarker) {
             console.log("HandTracker already initialized, skipping");
             return;
         }
+
+        console.log('Proceeding with initialization...');
+
 
         const vision = await FilesetResolver.forVisionTasks(
             "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
