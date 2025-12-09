@@ -29,15 +29,15 @@ export const Lobby: React.FC = () => {
                     <button
                         onClick={() => networkManager.startGame()}
                         disabled={playerList.length < 2}
-                        className={`w-full py-4 text-xl font-bold rounded transition-colors ${playerList.length < 2
+                        className={`w-full py-6 text-2xl font-bold rounded-lg transition-all transform ${playerList.length < 2
                             ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                            : 'bg-neon-blue text-black hover:bg-cyan-400'
+                            : 'bg-gradient-to-r from-neon-blue to-cyan-400 text-black hover:from-cyan-400 hover:to-neon-blue hover:scale-105 shadow-[0_0_30px_rgba(0,243,255,0.6)] hover:shadow-[0_0_40px_rgba(0,243,255,0.8)]'
                             }`}
                     >
                         START GAME
                     </button>
                 ) : (
-                    <div className="text-center text-neon-green animate-pulse">
+                    <div className="text-center text-neon-green animate-pulse text-lg">
                         Waiting for host to start...
                     </div>
                 )}
