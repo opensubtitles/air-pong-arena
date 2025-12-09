@@ -16,28 +16,26 @@ type CalibStep =
     | 'FINAL_CONFIRM'
     | 'COMPLETE';
 
-// Helper Component for Circular Progress
+// Helper Component for Circular Progress - CSS-based for reliability
 const CircularProgress = ({ progress, color = '#00F3FF', size = 112, stroke = 4 }: { progress: number, color?: string, size?: number, stroke?: number }) => {
-    const radius = (size - stroke) / 2;
-    const circumference = radius * 2 * Math.PI;
-    const offset = circumference - (Math.max(0, Math.min(progress, 100)) / 100) * circumference;
+    const percentage = Math.max(0, Math.min(progress, 100));
 
     return (
-        <svg
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 pointer-events-none transition-opacity duration-300"
-            style={{ width: size, height: size }}
+        <div
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+            style={{
+                width: size,
+                height: size,
+                background: `conic-gradient(${color} ${percentage * 3.6}deg, rgba(255,255,255,0.3) ${percentage * 3.6}deg)`,
+                padding: stroke,
+                transition: 'background 0.1s linear'
+            }}
         >
-            <circle cx={size / 2} cy={size / 2} r={radius} stroke="rgba(255,255,255,0.6)" strokeWidth={stroke} fill="transparent" />
-            <circle
-                cx={size / 2} cy={size / 2} r={radius}
-                stroke={color}
-                strokeWidth={stroke}
-                fill="transparent"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                className="transition-all duration-100 ease-linear"
+            <div
+                className="w-full h-full rounded-full bg-black"
+                style={{ opacity: 0.9 }}
             />
-        </svg>
+        </div>
     );
 };
 
