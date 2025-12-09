@@ -1,73 +1,55 @@
-# React + TypeScript + Vite
+# 🏓 Air Pong Arena
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Air Pong Arena** is a futuristic, gesture-controlled pong game playable directly in your browser. Using AI-powered hand tracking, you control the paddle with your real hand movements—no controller required.
 
-Currently, two official plugins are available:
+![Air Pong Arena Demo](public/vite.svg) *<!-- Replace with actual screenshot ideally -->*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🌟 Features
+-   **Hand Tracking Control**: Move your paddle by moving your index finger.
+-   **Gesture Recognition**:
+    -   **Open Hand ✋**: Boost / Calibration.
+    -   **Closed Fist ✊**: grab / Control.
+-   **Neon Aesthetics**: Cyberpunk-inspired visuals with bloom effects and dynamic lighting.
+-   **Multiplayer**: Create or join rooms to play against friends in real-time.
+-   **3D Physics**: Built with Three.js and Cannon.js for satisfying ball interaction.
 
-## React Compiler
+## 🎮 How to Play
+1.  **Calibrate**: Follow the initial "Dojo Training" to sync your hand position.
+2.  **Move**: Move your hand Left/Right to control the paddle.
+3.  **Boost**: Show an **Open Palm** to trigger a speed boost (if available).
+4.  **Win**: Score points by getting the ball past your opponent.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tech Stack
+-   **Frontend**: React, TypeScript, Vite
+-   **3D Engine**: React Three Fiber (Three.js)
+-   **AI/CV**: MediaPipe (Google), TensorFlow.js
+-   **State**: Zustand
+-   **Networking**: Socket.io (Signaling), WebRTC (P2P Data)
+-   **Styling**: TailwindCSS
 
-## Expanding the ESLint configuration
+## 🚀 Development
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
+-   Node.js (v18+)
+-   Webcam
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Setup
+```bash
+# Install dependencies
+npm install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Start development server
+npm run dev
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start local multiplayer server (optional for single player)
+node server/index.js
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📦 Deployment
+This project is configured for **GitHub Pages**.
+1.  Push to `main` branch.
+2.  The GitHub Action automatically builds and deploys the frontend.
+3.  (Optional) Set `VITE_SERVER_URL` in GitHub Secrets for your custom signaling server.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+*Powered by [OpenSubtitles.org](https://www.opensubtitles.org)*

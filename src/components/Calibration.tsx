@@ -475,5 +475,6 @@ export const Calibration: React.FC = () => {
                     Skip Training
                 </button>
             </div>
-            );
+        </div>
+    );
 };
