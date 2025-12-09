@@ -62,8 +62,6 @@ export const Calibration: React.FC = () => {
 
     // Logic Refs
     const msgTimer = useRef(0); // For debouncing messages
-    const graceTimer = useRef(0); // For forgiving hold errors
-    const cameraInitTimer = useRef<number | null>(null);
 
     // Ghost Paddle State
     const [ghostX, setGhostX] = useState(0.5); // 0-1 range
@@ -508,7 +506,7 @@ export const Calibration: React.FC = () => {
 
                             {/* Icons (Context Aware) */}
                             <div className={`transition-colors duration-300 text-6xl scale-x-[-1] ${showHandHint ? 'text-neon-pink animate-pulse' :
-                                    status === 'GREEN' ? 'text-neon-green' : 'text-white'
+                                status === 'GREEN' ? 'text-neon-green' : 'text-white'
                                 }`}>
                                 {(() => {
                                     if (!cameraReady) return null;
