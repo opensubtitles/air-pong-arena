@@ -51,6 +51,7 @@ class HandTrackingService {
         this.video = videoElement;
         navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
             videoElement.srcObject = stream;
+            videoElement.play(); // Start video playback
             videoElement.addEventListener("loadeddata", () => {
                 this.predictWebcam();
             });
