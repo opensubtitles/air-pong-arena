@@ -51,10 +51,22 @@ class HandTrackingService {
         this.video = videoElement;
         navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
             videoElement.srcObject = stream;
-            videoElement.play(); // Start video playback
+            videoElement.muted = true; // Ensure muted for autoplay
+            videoElement.playsInline = true; // Required for mobile
+
+            // Play with error handling
+            videoElement.play().then(() => {
+                console.log('Video playing successfully');
+            }).catch((err) => {
+                console.error('Video play failed:', err);
+            });
+
             videoElement.addEventListener("loadeddata", () => {
+                console.log('Video loaded, starting hand tracking');
                 this.predictWebcam();
             });
+        }).catch((err) => {
+            console.error('Camera access failed:', err);
         });
     }
 
