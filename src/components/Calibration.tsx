@@ -3,7 +3,7 @@ import { MoveLeft, MoveRight } from 'lucide-react'; // Icons
 import { handTracking } from '../services/HandTracking';
 import { useGameStore } from '../store/gameStore';
 
-type CalibStep =
+type CalibrationStep =
     | 'INIT'
     | 'DISTANCE_CHECK'
     | 'CENTER_OPEN'
@@ -12,7 +12,6 @@ type CalibStep =
     | 'CENTER_RETURN_1'
     | 'RIGHT_MOVE'
     | 'CENTER_RETURN_2'
-    | 'BOOST_TEACH'
     | 'FINAL_CONFIRM'
     | 'COMPLETE';
 
@@ -37,7 +36,7 @@ const CircularProgress = ({ progress, color = '#00F3FF', size = 112, stroke = 4 
 
 export const Calibration: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [step, setStep] = useState<CalibStep>('INIT');
+    const [step, setStep] = useState<CalibrationStep>('INIT');
     const [msg, setMsg] = useState('Initializing Environment...');
     const [subMsg, setSubMsg] = useState('');
     const [progress, setProgress] = useState(0);
@@ -61,11 +60,12 @@ export const Calibration: React.FC = () => {
     const [ghostY, setGhostY] = useState(0.5);
 
     const getProgress = () => {
-        const steps: CalibStep[] = [
-            'DISTANCE_CHECK', 'CENTER_FIST',
+        const steps: CalibrationStep[] = [
+            'INIT', 'DISTANCE_CHECK',
+            'CENTER_OPEN', 'CENTER_FIST',
             'LEFT_MOVE', 'CENTER_RETURN_1',
             'RIGHT_MOVE', 'CENTER_RETURN_2',
-            'BOOST_TEACH', 'FINAL_CONFIRM'
+            'FINAL_CONFIRM'
         ];
         const idx = steps.indexOf(step);
         if (step === 'COMPLETE') return 100;
@@ -413,26 +413,6 @@ export const Calibration: React.FC = () => {
                     }
                     break;
 
-                case 'BOOST_TEACH':
-                    if (gesture === 'open_palm') {
-                        holdTimer.current += dt;
-                        currentStatus = 'GREEN';
-
-                        const p = Math.min((holdTimer.current / 1000) * 100, 100);
-                        setProgress(p);
-
-                        if (holdTimer.current > 1000) {
-                            setStep('FINAL_CONFIRM');
-                            setMsg('Great! Close Fist to PLAY ✊');
-                            setSubMsg('Get Ready!');
-                            setProgress(0);
-                        }
-                    } else {
-                        currentStatus = 'ORANGE'; // Gesture wrong
-                        holdTimer.current = 0;
-                        setProgress(0);
-                    }
-                    break;
 
                 case 'FINAL_CONFIRM':
                     if (gesture === 'fist') {
@@ -488,7 +468,6 @@ export const Calibration: React.FC = () => {
             case 'RIGHT_MOVE': return "Move FIST to Right Target ➡️";
             case 'CENTER_RETURN_1':
             case 'CENTER_RETURN_2': return "Return to Center 🎯";
-            case 'BOOST_TEACH': return "Open Palm to BOOST! ✋";
             case 'FINAL_CONFIRM': return "Fist to Start Game! ✊";
             case 'COMPLETE': return "GLHF! 🎮";
             default: return msg; // Fallback
@@ -701,10 +680,7 @@ export const Calibration: React.FC = () => {
                         </>
                     )}
 
-                    {step === 'BOOST_TEACH' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-neon-pink/10 animate-pulse">
-                        </div>
-                    )}
+
                 </div>
 
                 <div className="mt-8 text-center h-24">
