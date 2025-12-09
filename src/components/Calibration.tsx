@@ -395,9 +395,9 @@ export const Calibration: React.FC = () => {
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
                         if (holdTimer.current > 500) {
-                            setStep('BOOST_TEACH');
-                            setMsg('OPEN PALM to Boost! ✋');
-                            setSubMsg('Try it now!');
+                            setStep('FINAL_CONFIRM');
+                            setMsg('Perfect! Close Fist to START ✊');
+                            setSubMsg('Get Ready!');
                             holdTimer.current = 0;
                             setProgress(0);
                         }
