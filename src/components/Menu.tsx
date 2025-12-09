@@ -14,7 +14,7 @@ export const Menu: React.FC = () => {
         soundManager.init();
         setGameMode('SINGLE_PLAYER');
         setIsHost(true);
-        setPhase('CALIBRATION');
+        setPhase('PLAYING'); // Skip calibration, go directly to game
     };
 
     const handleCreate = () => {
