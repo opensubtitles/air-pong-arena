@@ -91,6 +91,11 @@ class HandTrackingService {
             this.debugInfo.indexFingerX = indexFinger.x; // Raw X
             this.debugInfo.indexFingerY = indexFinger.y; // Raw Y
 
+            // More frequent logging to debug position tracking
+            if (Math.random() < 0.05) { // Log 5% of frames
+                console.log('Hand position:', indexFinger.x.toFixed(3), indexFinger.y.toFixed(3), 'Arena X:', arenaX.toFixed(2));
+            }
+
             // Calculate Scale/Distance (Wrist 0 to Middle MCP 9)
             const wrist = landmarks[0];
             const middleMCP = landmarks[9];
