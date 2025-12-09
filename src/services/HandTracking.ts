@@ -61,68 +61,66 @@ class HandTrackingService {
         if (!this.handLandmarker || !this.video) return;
 
         const startTimeMs = performance.now();
-        if (this.video.currentTime !== this.video.duration) { // Check if valid
-            const results = this.handLandmarker.detectForVideo(this.video, startTimeMs);
 
-            // Update Debug Info
-            const now = performance.now();
-            const processTime = now - startTimeMs;
+        // Detect hands from video
+        const results = this.handLandmarker.detectForVideo(this.video, startTimeMs);
 
-            this.debugInfo.handsDetected = results.landmarks.length;
-            this.debugInfo.lastProcessTime = processTime;
+        // Update Debug Info
+        const now = performance.now();
+        const processTime = now - startTimeMs;
 
-            // Debug logging
-            if (Math.random() < 0.01) { // Log 1% of frames to avoid spam
-                console.log('HandTracking: detected', results.landmarks.length, 'hands');
-            }
+        this.debugInfo.handsDetected = results.landmarks.length;
+        this.debugInfo.lastProcessTime = processTime;
 
-            // Simple FPS
-            this.debugInfo.fps = 1000 / (processTime + 1);
+        // Debug logging
+        if (Math.random() < 0.01) { // Log 1% of frames to avoid spam
+            console.log('HandTracking: detected', results.landmarks.length, 'hands');
+        }
 
-            if (results.landmarks && results.landmarks.length > 0) {
-                // Get Index Finger Tip (Index 8) of first hand
-                const landmarks = results.landmarks[0];
-                const indexFinger = landmarks[8];
+        // Simple FPS
+        this.debugInfo.fps = 1000 / (processTime + 1);
 
-                // Map X (0-1) to Arena Coordinates (-10 to 10)
-                const arenaX = (0.5 - indexFinger.x) * 20;
+        if (results.landmarks && results.landmarks.length > 0) {
+            // Get Index Finger Tip (Index 8) of first hand
+            const landmarks = results.landmarks[0];
+            const indexFinger = landmarks[8];
 
-                this.debugInfo.indexFingerX = indexFinger.x; // Raw X
-                this.debugInfo.indexFingerY = indexFinger.y; // Raw Y
+            // Map X (0-1) to Arena Coordinates (-10 to 10)
+            const arenaX = (0.5 - indexFinger.x) * 20;
 
-                // Calculate Scale/Distance (Wrist 0 to Middle MCP 9)
-                const wrist = landmarks[0];
-                const middleMCP = landmarks[9];
-                const dx = middleMCP.x - wrist.x;
-                const dy = middleMCP.y - wrist.y;
-                const dz = middleMCP.z - wrist.z;
-                const handSize = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            this.debugInfo.indexFingerX = indexFinger.x; // Raw X
+            this.debugInfo.indexFingerY = indexFinger.y; // Raw Y
 
-                this.debugInfo.handSize = handSize;
+            // Calculate Scale/Distance (Wrist 0 to Middle MCP 9)
+            const wrist = landmarks[0];
+            const middleMCP = landmarks[9];
+            const dx = middleMCP.x - wrist.x;
+            const dy = middleMCP.y - wrist.y;
+            const dz = middleMCP.z - wrist.z;
+            const handSize = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-                // Store landmarks for skeleton rendering
-                this.debugInfo.landmarks = landmarks.map(lm => ({ x: lm.x, y: lm.y }));
+            this.debugInfo.handSize = handSize;
 
-                const role = useGameStore.getState().isHost ? 'host' : 'client';
-                gamePhysics.updatePaddle(role, arenaX);
+            // Store landmarks for skeleton rendering
+            this.debugInfo.landmarks = landmarks.map(lm => ({ x: lm.x, y: lm.y }));
 
-                // --- GESTURE RECOGNITION (Fingerpose) ---
-                // The original code used fp.GestureEstimator with landmarks.
-                // The provided snippet suggests a different GestureEstimator and worldLandmarks.
-                // To maintain functionality with the existing setup, we'll stick to fp.GestureEstimator
-                // and map landmarks to the format it expects.
-                const fpLandmarks = landmarks.map(l => [l.x, l.y, l.z]);
-                const estimation = this.gestureEstimator.estimate(fpLandmarks, 8.5);
+            const role = useGameStore.getState().isHost ? 'host' : 'client';
+            gamePhysics.updatePaddle(role, arenaX);
 
-                if (estimation.gestures.length > 0) {
-                    const best = estimation.gestures.reduce((p, c) => (p.score > c.score ? p : c));
-                    this.debugInfo.gesture = best.name;
+            // --- GESTURE RECOGNITION (Fingerpose) ---
+            // The original code used fp.GestureEstimator with landmarks.
+            // The provided snippet suggests a different GestureEstimator and worldLandmarks.
+            // To maintain functionality with the existing setup, we'll stick to fp.GestureEstimator
+            // and map landmarks to the format it expects.
+            const fpLandmarks = landmarks.map(l => [l.x, l.y, l.z]);
+            const estimation = this.gestureEstimator.estimate(fpLandmarks, 8.5);
 
-                    // Trigger Game Action
-                    gamePhysics.triggerGesture(role, best.name);
-                } else {
-                    this.debugInfo.gesture = 'None';
-                }
+            if (estimation.gestures.length > 0) {
+                const best = estimation.gestures.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
+                this.debugInfo.gesture = best.name;
+                gamePhysics.triggerGesture(role, best.name);
+            } else {
+                this.debugInfo.gesture = 'None';
             }
         }
 
