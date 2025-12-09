@@ -612,7 +612,7 @@ export const Calibration: React.FC = () => {
                                 // Note: CircularProgress now handles the background track itself (stroke="rgba(255,255,255,0.2)")
                             }
                             {/* PROGRESS BAR - CENTERED FOR NON-MOVEMENT STEPS */}
-                            {!showHandHint && progress > 0 && step !== 'LEFT_MOVE' && step !== 'RIGHT_MOVE' && (
+                            {!showHandHint && step !== 'LEFT_MOVE' && step !== 'RIGHT_MOVE' && (
                                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
                                     <CircularProgress
                                         progress={progress}
@@ -662,14 +662,12 @@ export const Calibration: React.FC = () => {
                             {/* Target Icon (Solid) at Midpoint (Left 1/4) */}
                             <div className="absolute left-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse -translate-x-full pr-8">
                                 <div className="relative">
-                                    {progress > 0 && (
-                                        <CircularProgress
-                                            progress={progress}
-                                            size={140}
-                                            stroke={10}
-                                            color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
-                                        />
-                                    )}
+                                    <CircularProgress
+                                        progress={progress}
+                                        size={140}
+                                        stroke={10}
+                                        color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
+                                    />
                                     <div className="text-8xl text-neon-yellow scale-x-[-1] relative">✊</div>
                                 </div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
@@ -686,14 +684,12 @@ export const Calibration: React.FC = () => {
                             {/* Target Icon (Solid) at Midpoint (Right 1/4) */}
                             <div className="absolute right-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse translate-x-full pl-8">
                                 <div className="relative">
-                                    {progress > 0 && (
-                                        <CircularProgress
-                                            progress={progress}
-                                            size={140}
-                                            stroke={10}
-                                            color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
-                                        />
-                                    )}
+                                    <CircularProgress
+                                        progress={progress}
+                                        size={140}
+                                        stroke={10}
+                                        color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
+                                    />
                                     <div className="text-8xl text-neon-yellow scale-x-[-1] relative">✊</div>
                                 </div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
