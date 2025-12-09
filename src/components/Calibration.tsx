@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Trash2, MoveLeft, MoveRight } from 'lucide-react'; // Icons
+import { MoveLeft, MoveRight } from 'lucide-react'; // Icons
 import { handTracking } from '../services/HandTracking';
 import { useGameStore } from '../store/gameStore';
 
@@ -15,6 +15,31 @@ type CalibStep =
     | 'BOOST_TEACH'
     | 'FINAL_CONFIRM'
     | 'COMPLETE';
+
+// Helper Component for Circular Progress
+const CircularProgress = ({ progress, color = '#00F3FF', size = 112, stroke = 4 }: { progress: number, color?: string, size?: number, stroke?: number }) => {
+    const radius = (size - stroke) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (Math.max(0, Math.min(progress, 100)) / 100) * circumference;
+
+    return (
+        <svg
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 pointer-events-none transition-opacity duration-300"
+            style={{ width: size, height: size }}
+        >
+            <circle cx={size / 2} cy={size / 2} r={radius} stroke="rgba(255,255,255,0.2)" strokeWidth={stroke} fill="transparent" />
+            <circle
+                cx={size / 2} cy={size / 2} r={radius}
+                stroke={color}
+                strokeWidth={stroke}
+                fill="transparent"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                className="transition-all duration-100 ease-linear"
+            />
+        </svg>
+    );
+};
 
 export const Calibration: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -215,6 +240,7 @@ export const Calibration: React.FC = () => {
                                 setMsg('Move LEFT ⬅️');
                                 setSubMsg('Keep Fist Closed');
                                 holdTimer.current = 0;
+                                setProgress(0); // Reset for movement
                             }
                         } else {
                             // Position Good, Gesture Bad -> ORANGE
@@ -243,19 +269,37 @@ export const Calibration: React.FC = () => {
 
                 // ... Update other cases to set currentStatus similarly
                 case 'LEFT_MOVE':
-                    if (x < 0.2) {
-                        setStep('CENTER_RETURN_1');
-                        setMsg('Good! Return to CENTER ➡️');
-                        holdTimer.current = 0;
-                        currentStatus = 'GREEN';
-                    } else {
-                        if (gesture !== 'fist') {
+                    /* 
+                       Logic Update: 
+                       1. Must be in LEFT zone (x < 0.25).
+                       2. Must Hold for 1000ms.
+                    */
+                    if (x < 0.25) { // Left 1/4
+                        if (gesture === 'fist') {
+                            holdTimer.current += dt;
+                            const p = Math.min((holdTimer.current / 1000) * 100, 100);
+                            setProgress(p);
+                            currentStatus = 'GREEN';
+                            setSubMsg('Hold steady...');
+
+                            if (holdTimer.current > 1000) {
+                                setStep('CENTER_RETURN_1');
+                                setMsg('Good! Return to CENTER ➡️');
+                                holdTimer.current = 0;
+                                setProgress(0);
+                            }
+                        } else {
                             setSubMsg('Keep Fist Closed! ✊');
                             currentStatus = 'ORANGE';
-                        } else {
-                            setSubMsg('Move your hand left');
-                            currentStatus = 'GREEN'; // Position finding...
+                            holdTimer.current = 0;
+                            setProgress(0);
                         }
+                    } else {
+                        // Moving towards left
+                        setSubMsg('Move your hand left');
+                        currentStatus = 'GREEN';
+                        holdTimer.current = 0;
+                        setProgress(0);
                     }
                     break;
 
@@ -268,25 +312,59 @@ export const Calibration: React.FC = () => {
                     if (Math.abs(x - 0.5) < 0.15) {
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
-                        if (holdTimer.current > 1000) {
+                        if (holdTimer.current > 1000) { // Fast center check
                             setStep('RIGHT_MOVE');
                             setMsg('Move RIGHT ➡️');
                             setSubMsg('Keep Fist Closed');
                             holdTimer.current = 0;
+                            setProgress(0);
                         }
                     } else {
-                        currentStatus = 'RED'; // Not centered yet
+                        currentStatus = 'ORANGE'; // Guide back
+                        updateMsg('Return to CENTER ➡️', '');
+                        holdTimer.current = 0;
+                        setProgress(0);
                     }
                     break;
 
                 case 'RIGHT_MOVE':
-                    if (x > 0.8) {
-                        setStep('CENTER_RETURN_2');
-                        setMsg('Good! Return to CENTER ⬅️');
-                        holdTimer.current = 0;
-                        currentStatus = 'GREEN';
+                    /* 
+                      Logic Update: 
+                      1. Must be in RIGHT zone (x > 0.75).
+                      2. Must Hold for 1000ms.
+                   */
+                    if (x > 0.75) { // Right 1/4 (mirrored X < 0.25 on screen logic, but data is 0-1)
+                        // x is raw from mediapipe (0 is left, 1 is right - check flip logic)
+                        // wait, x is mirrored for rendering? No, video is scale-x-100 logic.
+                        // data x: 0 is left of camera stream (User's Right).
+                        // Let's assume standard intuitive mapping:
+                        // Left Move means User moves hand to THEIR Left (Camera Right).
+                        // Let's stick to existing thresholds. Previous code had x < 0.2 for Left.
+                        // So Right should be x > 0.8.
+                        if (gesture === 'fist') {
+                            holdTimer.current += dt;
+                            const p = Math.min((holdTimer.current / 1000) * 100, 100);
+                            setProgress(p);
+                            currentStatus = 'GREEN';
+                            setSubMsg('Hold steady...');
+
+                            if (holdTimer.current > 1000) {
+                                setStep('CENTER_RETURN_2');
+                                setMsg('Good! Return to CENTER ⬅️');
+                                holdTimer.current = 0;
+                                setProgress(0);
+                            }
+                        } else {
+                            setSubMsg('Keep Fist Closed! ✊');
+                            currentStatus = 'ORANGE';
+                            holdTimer.current = 0;
+                            setProgress(0);
+                        }
                     } else {
-                        currentStatus = 'GREEN'; // Moving...
+                        currentStatus = 'GREEN';
+                        setSubMsg('Move right...');
+                        holdTimer.current = 0;
+                        setProgress(0);
                     }
                     break;
 
@@ -299,9 +377,13 @@ export const Calibration: React.FC = () => {
                             setMsg('OPEN PALM to Boost! ✋');
                             setSubMsg('Try it now!');
                             holdTimer.current = 0;
+                            setProgress(0);
                         }
                     } else {
-                        currentStatus = 'RED';
+                        currentStatus = 'ORANGE';
+                        updateMsg('Return to CENTER ⬅️', '');
+                        holdTimer.current = 0;
+                        setProgress(0);
                     }
                     break;
 
@@ -318,6 +400,7 @@ export const Calibration: React.FC = () => {
                             setStep('FINAL_CONFIRM');
                             setMsg('Great! Close Fist to PLAY ✊');
                             setSubMsg('Get Ready!');
+                            setProgress(0);
                         }
                     } else {
                         currentStatus = 'ORANGE'; // Gesture wrong
@@ -339,6 +422,7 @@ export const Calibration: React.FC = () => {
                     break;
             }
 
+            setStatus(currentStatus); // Actually update state
             frameId = requestAnimationFrame(loop);
         };
 
@@ -386,7 +470,6 @@ export const Calibration: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Show Hand Hint Overlay */}
                     {/* Unified Central overlay for Hand Hint + Calibration Steps */}
                     <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-out
                         ${showHandHint ? 'bg-black/60 z-50' : ''}
@@ -394,20 +477,12 @@ export const Calibration: React.FC = () => {
                         <div className={`relative flex flex-col items-center transition-transform duration-500
                             ${showHandHint ? 'scale-[3.0]' : 'scale-100'} 
                         `}>
-                            {/* Circular Progress (Shared) */}
+                            {/* Circular Progress (Shared CENTER) */}
                             {((step === 'CENTER_OPEN' || step === 'CENTER_FIST') && !showHandHint) && (
-                                <svg className="absolute -top-6 -left-6 w-28 h-28 transform -rotate-90 pointer-events-none transition-opacity duration-300">
-                                    <circle cx="56" cy="56" r="50" stroke="rgba(255,255,255,0.2)" strokeWidth="4" fill="transparent" />
-                                    <circle
-                                        cx="56" cy="56" r="50"
-                                        stroke={step === 'CENTER_FIST' ? '#F0F' : '#00F3FF'}
-                                        strokeWidth="4"
-                                        fill="transparent"
-                                        strokeDasharray="314"
-                                        strokeDashoffset={314 - (Math.max(0, progress) / 100) * 314}
-                                        className="transition-all duration-100 ease-linear"
-                                    />
-                                </svg>
+                                <CircularProgress
+                                    progress={progress}
+                                    color={step === 'CENTER_FIST' ? '#F0F' : '#00F3FF'}
+                                />
                             )}
 
                             {/* Icons (Context Aware) */}
@@ -448,7 +523,11 @@ export const Calibration: React.FC = () => {
                             </div>
                             {/* Target Icon (Solid) at Midpoint (Left 1/4) */}
                             <div className="absolute left-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse -translate-x-full pr-8">
-                                <div className="text-6xl text-neon-yellow scale-x-[-1]">✊</div>
+                                <div className="relative">
+                                    {/* Side Progress */}
+                                    <CircularProgress progress={progress} color="#FFFF00" size={100} />
+                                    <div className="text-6xl text-neon-yellow scale-x-[-1] relative">✊</div>
+                                </div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
                             </div>
                         </>
@@ -462,7 +541,11 @@ export const Calibration: React.FC = () => {
                             </div>
                             {/* Target Icon (Solid) at Midpoint (Right 1/4) */}
                             <div className="absolute right-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse translate-x-full pl-8">
-                                <div className="text-6xl text-neon-yellow scale-x-[-1]">✊</div>
+                                <div className="relative">
+                                    {/* Side Progress */}
+                                    <CircularProgress progress={progress} color="#FFFF00" size={100} />
+                                    <div className="text-6xl text-neon-yellow scale-x-[-1] relative">✊</div>
+                                </div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
                             </div>
                         </>
