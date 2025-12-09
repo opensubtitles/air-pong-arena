@@ -27,7 +27,7 @@ const CircularProgress = ({ progress, color = '#00F3FF', size = 112, stroke = 4 
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 pointer-events-none transition-opacity duration-300"
             style={{ width: size, height: size }}
         >
-            <circle cx={size / 2} cy={size / 2} r={radius} stroke="rgba(255,255,255,0.2)" strokeWidth={stroke} fill="transparent" />
+            <circle cx={size / 2} cy={size / 2} r={radius} stroke="rgba(255,255,255,0.4)" strokeWidth={stroke} fill="transparent" />
             <circle
                 cx={size / 2} cy={size / 2} r={radius}
                 stroke={color}
@@ -613,7 +613,7 @@ export const Calibration: React.FC = () => {
                                 // Note: CircularProgress now handles the background track itself (stroke="rgba(255,255,255,0.2)")
                             }
                             {(step === 'CENTER_OPEN' || step === 'CENTER_FIST' || step.includes('CENTER_RETURN') || step === 'FINAL_CONFIRM') && !showHandHint && (
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[120px] h-[120px] flex items-center justify-center z-0">
                                     <CircularProgress
                                         progress={progress}
                                         size={120}
