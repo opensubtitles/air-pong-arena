@@ -635,7 +635,7 @@ export const Calibration: React.FC = () => {
                                     if (!cameraReady) return null;
 
                                     // Determine expected icon type
-                                    const useFist = step === 'CENTER_FIST' || step === 'LEFT_MOVE' || step === 'RIGHT_MOVE' || step.includes('CENTER_RETURN') || step === 'FINAL_CONFIRM';
+                                    const useFist = step === 'CENTER_FIST' || step === 'LEFT_MOVE' || step === 'RIGHT_MOVE' || step.includes('CENTER_RETURN') || step === 'FINAL_CONFIRM' || step === 'COMPLETE';
                                     const icon = useFist ? '✊' : '✋';
 
                                     // If we are in movement drills, the central icon only appears if we lost tracking (showHandHint)
