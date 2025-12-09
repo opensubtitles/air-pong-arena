@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Environment } from '@react-three/drei';
 import { Arena } from './Arena';
@@ -10,6 +10,7 @@ import { PhysicsController } from './PhysicsController';
 import { HUD } from '../components/HUD';
 import { KeyboardControls } from '../components/KeyboardControls';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import { handTracking } from '../services/HandTracking';
 
 interface GameSceneProps {
     demoMode?: boolean;
@@ -36,9 +37,28 @@ const FPSLimiter: React.FC<{ fps: number }> = ({ fps }) => {
 };
 
 export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    // Initialize hand tracking for gameplay
+    useEffect(() => {
+        if (!demoMode && videoRef.current && !handTracking.debugInfo.initialized) {
+            handTracking.startWebcam(videoRef.current);
+        }
+    }, [demoMode]);
+
     return (
         <div className="w-full h-screen absolute top-0 left-0">
             {!demoMode && <HUD />}
+
+            {/* Hidden video element for hand tracking */}
+            {!demoMode && (
+                <video
+                    ref={videoRef}
+                    className="hidden"
+                    playsInline
+                    muted
+                />
+            )}
 
             <div className="w-full h-full -z-10">
                 <Canvas
