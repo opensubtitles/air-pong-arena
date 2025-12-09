@@ -526,12 +526,20 @@ export const Calibration: React.FC = () => {
                 {/* Overlays */}
                 <div className="absolute inset-0 pointer-events-none">
 
-                    {/* GLOBAL TOO CLOSE OVERLAY */}
+                    {/* Floating "TOO CLOSE" Warning (Follows Hand) */}
                     {(handTracking.debugInfo.handSize > 0.35 && step !== 'INIT') && (
-                        <div className="absolute inset-0 z-[100] bg-red-900/80 flex flex-col items-center justify-center animate-pulse">
-                            <div className="text-6xl mb-4">🛑</div>
-                            <h2 className="text-4xl font-black text-white uppercase tracking-widest">TOO CLOSE</h2>
-                            <p className="text-xl text-white mt-2 font-mono">Move Back 🔙</p>
+                        <div
+                            className="absolute z-50 flex flex-col items-center animate-bounce"
+                            style={{
+                                left: `${ghostX * 100}%`,
+                                top: `${Math.min((ghostY + 0.15) * 100, 95)}%`, // Below hand, capped at bottom
+                                transform: 'translate(-50%, -50%)'
+                            }}
+                        >
+                            <div className="bg-red-600 text-white font-bold px-3 py-1 rounded-full shadow-[0_0_15px_rgba(255,0,0,1)] border-2 border-white whitespace-nowrap">
+                                TOO CLOSE! 🛑
+                            </div>
+                            <div className="text-red-500 font-bold text-xs mt-1 drop-shadow-md">Move Back</div>
                         </div>
                     )}
 
