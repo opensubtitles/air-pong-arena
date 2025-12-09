@@ -82,9 +82,9 @@ export const Menu: React.FC = () => {
                     className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm animate-in fade-in duration-300"
                     onClick={handleInteraction}
                 >
-                    <Volume2 size={80} className="text-neon-blue mb-4 animate-bounce" />
-                    <h2 className="text-3xl font-bold text-white mb-2">SOUND REQUIRED</h2>
-                    <p className="text-xl text-neon-blue animate-pulse">Click anywhere to start</p>
+                    <p className="text-4xl font-black text-neon-green animate-pulse tracking-widest drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">
+                        TAP TO START
+                    </p>
                 </div>
             )}
 
