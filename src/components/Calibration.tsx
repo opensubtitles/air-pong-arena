@@ -219,14 +219,14 @@ export const Calibration: React.FC = () => {
                             holdTimer.current += dt;
                             currentStatus = 'GREEN';
 
-                            // 2000ms hold (2 seconds)
-                            const p = Math.min((holdTimer.current / 2000) * 100, 100);
+                            // 1000ms hold (1 second)
+                            const p = Math.min((holdTimer.current / 1000) * 100, 100);
                             setProgress(p);
                             // Direct feedback
                             setMsg('Hold Open... ✋');
-                            setSubMsg(`${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
+                            setSubMsg(`${Math.ceil((1000 - holdTimer.current) / 100)}%`);
 
-                            if (holdTimer.current > 2000) {
+                            if (holdTimer.current > 1000) {
                                 setStep('CENTER_FIST');
                                 setMsg('Now CLOSE your hand ✊');
                                 setSubMsg('Make a fist');
@@ -258,12 +258,12 @@ export const Calibration: React.FC = () => {
                             holdTimer.current += dt;
                             currentStatus = 'GREEN';
 
-                            const p = Math.min((holdTimer.current / 2000) * 100, 100);
+                            const p = Math.min((holdTimer.current / 1000) * 100, 100);
                             setProgress(p);
                             setMsg('Hold Steady... ✊');
-                            setSubMsg(`${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
+                            setSubMsg(`${Math.ceil((1000 - holdTimer.current) / 100)}%`);
 
-                            if (holdTimer.current > 2000) {
+                            if (holdTimer.current > 1000) {
                                 setStep('LEFT_MOVE');
                                 setMsg('Move LEFT ⬅️');
                                 setSubMsg('Keep Fist Closed');
