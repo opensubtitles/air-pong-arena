@@ -334,11 +334,13 @@ export const Calibration: React.FC = () => {
                 // I will include the rest of the cases with status updates.
 
                 case 'CENTER_RETURN_1':
-                    // Quick center check (Radial)
-                    if (distFromCenter < 0.25) { // Relaxed return check
+                    // Center check with 1 second hold
+                    if (distFromCenter < 0.25) {
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
-                        if (holdTimer.current > 500) { // Fast
+                        const p = Math.min((holdTimer.current / 1000) * 100, 100);
+                        setProgress(p);
+                        if (holdTimer.current > 1000) {
                             setStep('RIGHT_MOVE');
                             setMsg('Move RIGHT ➡️');
                             setSubMsg('Keep Fist Closed');
@@ -346,7 +348,7 @@ export const Calibration: React.FC = () => {
                             setProgress(0);
                         }
                     } else {
-                        currentStatus = 'ORANGE'; // Guide back
+                        currentStatus = 'ORANGE';
                         setMsg('Return to CENTER ➡️');
                         holdTimer.current = 0;
                         setProgress(0);
@@ -394,7 +396,9 @@ export const Calibration: React.FC = () => {
                     if (distFromCenter < 0.25) {
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
-                        if (holdTimer.current > 500) {
+                        const p = Math.min((holdTimer.current / 1000) * 100, 100);
+                        setProgress(p);
+                        if (holdTimer.current > 1000) {
                             setStep('FINAL_CONFIRM');
                             setMsg('Perfect! Close Fist to START ✊');
                             setSubMsg('Get Ready!');
