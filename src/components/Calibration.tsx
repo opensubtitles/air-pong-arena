@@ -624,7 +624,7 @@ export const Calibration: React.FC = () => {
                             )}
 
                             {/* Icons (Context Aware) */}
-                            <div className={`transition-colors duration-300 text-6xl scale-x-[-1] ${showHandHint ? 'text-neon-pink animate-pulse' :
+                            <div className={`transition-colors duration-300 text-6xl scale-x-[-1] opacity-50 ${showHandHint ? 'text-neon-pink animate-pulse' :
                                 status === 'GREEN' ? 'text-neon-green' : 'text-white'
                                 }`}>
                                 {(() => {
