@@ -79,19 +79,24 @@ class HandTrackingService {
     predictWebcam() {
         if (!this.handLandmarker || !this.video) return;
 
-        const startTimeMs = performance.now();
+        // Start time for measuring the processing duration
+        const processStartTime = performance.now();
+
+        // Use video's currentTime as timestamp (in milliseconds)
+        // This ensures MediaPipe processes the actual current frame, not cached results
+        const videoTimeMs = this.video.currentTime * 1000;
 
         // Log video time to verify it's playing
         if (Math.random() < 0.02) { // Log 2% of frames
             console.log('Video time:', this.video.currentTime.toFixed(2), 'Ready state:', this.video.readyState);
         }
 
-        // Detect hands from video
-        const results = this.handLandmarker.detectForVideo(this.video, startTimeMs);
+        // Detect hands from video using video timestamp
+        const results = this.handLandmarker.detectForVideo(this.video, videoTimeMs);
 
         // Update Debug Info
-        const now = performance.now();
-        const processTime = now - startTimeMs;
+        const processEndTime = performance.now();
+        const processTime = processEndTime - processStartTime;
 
         this.debugInfo.handsDetected = results.landmarks.length;
         this.debugInfo.lastProcessTime = processTime;
