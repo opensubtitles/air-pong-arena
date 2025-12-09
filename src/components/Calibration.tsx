@@ -611,33 +611,17 @@ export const Calibration: React.FC = () => {
                             {/* PROGRESS BAR - MOVED AROUND MAIN ICON */
                                 // Note: CircularProgress now handles the background track itself (stroke="rgba(255,255,255,0.2)")
                             }
-                            {/* PROGRESS BAR - DYNAMICALLY POSITIONED */}
-                            {!showHandHint && progress > 0 && (() => {
-                                // Determine position based on step
-                                let positionStyle = {};
-                                if (step === 'LEFT_MOVE') {
-                                    positionStyle = { left: '25%', top: '50%' };
-                                } else if (step === 'RIGHT_MOVE') {
-                                    positionStyle = { left: '75%', top: '50%' };
-                                } else {
-                                    // Center position for all other steps
-                                    positionStyle = { left: '50%', top: '50%' };
-                                }
-
-                                return (
-                                    <div
-                                        className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
-                                        style={positionStyle}
-                                    >
-                                        <CircularProgress
-                                            progress={progress}
-                                            size={140}
-                                            stroke={10}
-                                            color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
-                                        />
-                                    </div>
-                                );
-                            })()}
+                            {/* PROGRESS BAR - CENTERED FOR NON-MOVEMENT STEPS */}
+                            {!showHandHint && progress > 0 && step !== 'LEFT_MOVE' && step !== 'RIGHT_MOVE' && (
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                                    <CircularProgress
+                                        progress={progress}
+                                        size={140}
+                                        stroke={10}
+                                        color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
+                                    />
+                                </div>
+                            )}
 
                             {/* Icons (Context Aware) */}
                             <div className={`transition-colors duration-300 text-8xl scale-x-[-1] opacity-50 ${showHandHint ? 'text-neon-pink animate-pulse' :
@@ -678,6 +662,14 @@ export const Calibration: React.FC = () => {
                             {/* Target Icon (Solid) at Midpoint (Left 1/4) */}
                             <div className="absolute left-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse -translate-x-full pr-8">
                                 <div className="relative">
+                                    {progress > 0 && (
+                                        <CircularProgress
+                                            progress={progress}
+                                            size={140}
+                                            stroke={10}
+                                            color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
+                                        />
+                                    )}
                                     <div className="text-8xl text-neon-yellow scale-x-[-1] relative">✊</div>
                                 </div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
@@ -694,6 +686,14 @@ export const Calibration: React.FC = () => {
                             {/* Target Icon (Solid) at Midpoint (Right 1/4) */}
                             <div className="absolute right-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse translate-x-full pl-8">
                                 <div className="relative">
+                                    {progress > 0 && (
+                                        <CircularProgress
+                                            progress={progress}
+                                            size={140}
+                                            stroke={10}
+                                            color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
+                                        />
+                                    )}
                                     <div className="text-8xl text-neon-yellow scale-x-[-1] relative">✊</div>
                                 </div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
