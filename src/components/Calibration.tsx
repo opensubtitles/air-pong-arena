@@ -556,7 +556,9 @@ export const Calibration: React.FC = () => {
                         );
                     })}
                     {skeleton.map((p, i) => {
-                        if (i === 8) return null; // Skip Index Tip (covered by Ghost Cursor)
+                        // Skip Index Finger joints (5,6,7,8) completely to avoid clutter
+                        // The main Ghost Cursor tracks this finger.
+                        if (i >= 5 && i <= 8) return null;
                         return (
                             <circle
                                 key={i}
@@ -641,6 +643,9 @@ export const Calibration: React.FC = () => {
                                     // If we are in movement drills, the central icon only appears if we lost tracking (showHandHint)
                                     // Otherwise, we show directional cues instead of a center icon
                                     if (!showHandHint && (step === 'LEFT_MOVE' || step === 'RIGHT_MOVE')) return null;
+
+                                    // Explicit override for FINAL_CONFIRM (ensure it shows)
+                                    if (step === 'FINAL_CONFIRM') return <div className="animate-bounce">✊</div>;
 
                                     return <div>{icon}</div>;
                                 })()}
