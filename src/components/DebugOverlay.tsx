@@ -10,7 +10,20 @@ export const DebugOverlay: React.FC = () => {
     useEffect(() => {
         if (!debugMode) return;
         const interval = setInterval(() => {
-            setStats({ ...handTracking.debugInfo });
+            // Create a fresh copy to force re-render
+            const newStats = {
+                initialized: handTracking.debugInfo.initialized,
+                handsDetected: handTracking.debugInfo.handsDetected,
+                indexFingerX: handTracking.debugInfo.indexFingerX,
+                indexFingerY: handTracking.debugInfo.indexFingerY,
+                handSize: handTracking.debugInfo.handSize,
+                gesture: handTracking.debugInfo.gesture,
+                lastProcessTime: handTracking.debugInfo.lastProcessTime,
+                fps: handTracking.debugInfo.fps,
+                landmarks: handTracking.debugInfo.landmarks
+            };
+            console.log('Debug update:', newStats.handsDetected, newStats.indexFingerX);
+            setStats(newStats);
         }, 100); // 10Hz update
         return () => clearInterval(interval);
     }, [debugMode]);
