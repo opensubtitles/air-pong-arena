@@ -8,7 +8,6 @@ import { GameOver } from './components/GameOver';
 import { Volume2, VolumeX } from 'lucide-react'; // Icons
 
 import { DebugOverlay } from './components/DebugOverlay';
-import { handTracking } from './services/HandTracking';
 
 function App() {
   const phase = useGameStore((state) => state.phase);
@@ -19,21 +18,6 @@ function App() {
   // Audio Ref and Prompt State
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [showAudioPrompt, setShowAudioPrompt] = useState(false);
-
-  // Global video element for hand tracking
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Initialize hand tracking when entering PLAYING phase
-  useEffect(() => {
-    if (phase === 'PLAYING' && videoRef.current && !handTracking.debugInfo.initialized) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        if (videoRef.current) {
-          handTracking.startWebcam(videoRef.current);
-        }
-      }, 500);
-    }
-  }, [phase]);
 
   // Attempt Autoplay whenever phase or track changes
   useEffect(() => {
@@ -90,14 +74,6 @@ function App() {
           </p>
         </div>
       )}
-
-      {/* Global hidden video element for hand tracking */}
-      <video
-        ref={videoRef}
-        className="hidden"
-        playsInline
-        muted
-      />
 
       {/* Background Animation for Menu */}
       {phase === 'MENU' && (
