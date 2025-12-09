@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Trash2, MoveLeft, MoveRight } from 'lucide-react'; // Icons
 import { handTracking } from '../services/HandTracking';
 import { useGameStore } from '../store/gameStore';
 
@@ -18,7 +19,7 @@ type CalibStep =
 export const Calibration: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [step, setStep] = useState<CalibStep>('INIT');
-    const [msg, setMsg] = useState('Initializing AI...');
+    const [msg, setMsg] = useState('Initializing Environment...'); // Updated initial text
     const [subMsg, setSubMsg] = useState('');
     const [progress, setProgress] = useState(0);
     const [status, setStatus] = useState<'RED' | 'ORANGE' | 'GREEN'>('RED'); // Traffic Light
@@ -65,6 +66,18 @@ export const Calibration: React.FC = () => {
         };
         init();
     }, []);
+
+    // ... (rest of the file until the overlay logic)
+
+    // Inside the render return, locate the overlay div
+    /* 
+       Updated Logic:
+       - Scale: 3.0 (20% bigger than 2.5)
+       - Hand Orientation: scale-x-[-1] to flip to Right Hand
+    */
+
+    // Returning the modified snippet for the overlay block:
+
 
     useEffect(() => {
         let frameId: number;
@@ -375,16 +388,11 @@ export const Calibration: React.FC = () => {
 
                     {/* Show Hand Hint Overlay */}
                     {/* Unified Central overlay for Hand Hint + Calibration Steps */}
-                    {/* Position logic: standard centralized, but for movement drills we might want to shift focus? 
-                         actually the request was: "from center to side arrow". 
-                         So the "Context Hint" stays central (or where hand was?). 
-                         Let's keep the hint central for simplicity/robustness. 
-                    */}
                     <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-out
                         ${showHandHint ? 'bg-black/60 z-50' : ''}
                     `}>
                         <div className={`relative flex flex-col items-center transition-transform duration-500
-                            ${showHandHint ? 'scale-[2.5]' : 'scale-100'}
+                            ${showHandHint ? 'scale-[3.0]' : 'scale-100'} 
                         `}>
                             {/* Circular Progress (Shared) */}
                             {((step === 'CENTER_OPEN' || step === 'CENTER_FIST') && !showHandHint) && (
@@ -403,8 +411,8 @@ export const Calibration: React.FC = () => {
                             )}
 
                             {/* Icons (Context Aware) */}
-                            <div className={`transition-colors duration-300 text-6xl ${showHandHint ? 'text-neon-pink animate-pulse' :
-                                status === 'GREEN' ? 'text-neon-green' : 'text-white'
+                            <div className={`transition-colors duration-300 text-6xl scale-x-[-1] ${showHandHint ? 'text-neon-pink animate-pulse' :
+                                    status === 'GREEN' ? 'text-neon-green' : 'text-white'
                                 }`}>
                                 {/* Logic: 
                                     If Show Hand Hint -> Show EXPECTED Icon for that step.
@@ -426,7 +434,7 @@ export const Calibration: React.FC = () => {
 
                             {/* Text for Show Hand Hint */}
                             {showHandHint && (
-                                <p className="text-xs mt-4 font-bold text-neon-pink tracking-widest uppercase whitespace-nowrap">Show Hand</p>
+                                <p className="text-xs mt-4 font-bold text-neon-pink tracking-widest uppercase whitespace-nowrap scale-x-[-1]">Show Hand</p>
                             )}
                         </div>
                     </div>
@@ -434,11 +442,13 @@ export const Calibration: React.FC = () => {
                     {/* Movement Drill Visuals (Separate from Central Overlay) */}
                     {step === 'LEFT_MOVE' && !showHandHint && (
                         <>
-                            {/* Guide Arrow (50% opacity) */}
-                            <div className="absolute left-1/4 top-1/2 -translate-y-1/2 -translate-x-1/2 text-8xl text-neon-yellow/50 pointer-events-none">⬅️</div>
-                            {/* Target Icon (Solid) */}
-                            <div className="absolute left-10 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse">
-                                <div className="text-6xl text-neon-yellow">✊</div>
+                            {/* Guide Arrow (30% opacity, long) */}
+                            <div className="absolute left-1/4 top-1/2 -translate-y-1/2 translate-x-12 text-neon-yellow/30 pointer-events-none">
+                                <MoveLeft className="w-32 h-32" strokeWidth={1} />
+                            </div>
+                            {/* Target Icon (Solid) at Midpoint (Left 1/4) */}
+                            <div className="absolute left-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse -translate-x-full pr-8">
+                                <div className="text-6xl text-neon-yellow scale-x-[-1]">✊</div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
                             </div>
                         </>
@@ -446,11 +456,13 @@ export const Calibration: React.FC = () => {
 
                     {step === 'RIGHT_MOVE' && !showHandHint && (
                         <>
-                            {/* Guide Arrow (50% opacity) */}
-                            <div className="absolute right-1/4 top-1/2 -translate-y-1/2 translate-x-1/2 text-8xl text-neon-yellow/50 pointer-events-none">➡️</div>
-                            {/* Target Icon (Solid) */}
-                            <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse">
-                                <div className="text-6xl text-neon-yellow">✊</div>
+                            {/* Guide Arrow (30% opacity, long) */}
+                            <div className="absolute right-1/4 top-1/2 -translate-y-1/2 -translate-x-12 text-neon-yellow/30 pointer-events-none">
+                                <MoveRight className="w-32 h-32" strokeWidth={1} />
+                            </div>
+                            {/* Target Icon (Solid) at Midpoint (Right 1/4) */}
+                            <div className="absolute right-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse translate-x-full pl-8">
+                                <div className="text-6xl text-neon-yellow scale-x-[-1]">✊</div>
                                 <div className="text-sm text-neon-yellow font-bold mt-2">TARGET</div>
                             </div>
                         </>
