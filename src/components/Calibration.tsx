@@ -163,10 +163,6 @@ export const Calibration: React.FC = () => {
                 setStatus('RED'); // Ensure Red Border
                 frameId = requestAnimationFrame(loop);
                 return;
-            }
-            setShowHandHint(false);
-
-            if (hands > 1) {
                 setMsg('Too many hands! Use ONE only.');
                 frameId = requestAnimationFrame(loop);
                 return;
