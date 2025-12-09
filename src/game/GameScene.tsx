@@ -78,12 +78,12 @@ export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
             <div className="w-full h-full -z-10">
                 <Canvas
                     camera={{ position: [0, 15, 25], fov: 60 }}
-                    shadows={!demoMode} // Disable shadows in demo mode
+                    shadows={!demoMode} // Disable shadows in demo mode for performance
                     gl={{
                         antialias: false,
                         stencil: false,
                         depth: false,
-                        powerPreference: demoMode ? 'low-power' : 'high-performance' // Low power for demo
+                        powerPreference: demoMode ? 'low-power' : 'high-performance'
                     }}
                     frameloop={demoMode ? 'demand' : 'always'} // Render on demand in demo mode
                 >
@@ -98,7 +98,7 @@ export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
                     <pointLight position={[0, 10, 0]} intensity={0.5} color="#00f3ff" />
 
                     <Suspense fallback={null}>
-                        {!demoMode && <Environment preset="city" />}
+                        <Environment preset="city" />
                         {/* Reduce stars in demo mode */}
                         <Stars radius={100} depth={50} count={demoMode ? 1000 : 5000} factor={4} saturation={0} fade speed={1} />
 
@@ -115,12 +115,9 @@ export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
                         {/* Controls intended for debug only, will be removed/disabled in gameplay */}
                         {!demoMode && <OrbitControls maxPolarAngle={Math.PI / 2} minDistance={5} maxDistance={50} />}
 
-                        {/* Disable bloom in demo mode for better performance */}
-                        {!demoMode && (
-                            <EffectComposer>
-                                <Bloom luminanceThreshold={1} mipmapBlur intensity={1.5} radius={0.6} />
-                            </EffectComposer>
-                        )}
+                        <EffectComposer>
+                            <Bloom luminanceThreshold={1} mipmapBlur intensity={1.5} radius={0.6} />
+                        </EffectComposer>
                     </Suspense>
                 </Canvas>
             </div>
