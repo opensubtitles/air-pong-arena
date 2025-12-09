@@ -610,7 +610,7 @@ export const Calibration: React.FC = () => {
                         ${showHandHint ? 'bg-black/60 z-50' : ''}
                     `}>
                         <div className={`relative flex flex-col items-center transition-transform duration-500
-                            ${showHandHint ? 'scale-[5.0]' : 'scale-100'} 
+                            ${showHandHint ? 'scale-[3.5]' : 'scale-100'} 
                         `}>
                             {/* PROGRESS BAR - MOVED AROUND MAIN ICON */
                                 // Note: CircularProgress now handles the background track itself (stroke="rgba(255,255,255,0.2)")
