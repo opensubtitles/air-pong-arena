@@ -412,7 +412,7 @@ export const Calibration: React.FC = () => {
 
                             {/* Icons (Context Aware) */}
                             <div className={`transition-colors duration-300 text-6xl scale-x-[-1] ${showHandHint ? 'text-neon-pink animate-pulse' :
-                                    status === 'GREEN' ? 'text-neon-green' : 'text-white'
+                                status === 'GREEN' ? 'text-neon-green' : 'text-white'
                                 }`}>
                                 {/* Logic: 
                                     If Show Hand Hint -> Show EXPECTED Icon for that step.
@@ -434,7 +434,7 @@ export const Calibration: React.FC = () => {
 
                             {/* Text for Show Hand Hint */}
                             {showHandHint && (
-                                <p className="text-xs mt-4 font-bold text-neon-pink tracking-widest uppercase whitespace-nowrap scale-x-[-1]">Show Hand</p>
+                                <p className="text-xs mt-4 font-bold text-neon-pink tracking-widest uppercase whitespace-nowrap">Show Hand</p>
                             )}
                         </div>
                     </div>
