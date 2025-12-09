@@ -21,6 +21,17 @@ export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
     const [skeleton, setSkeleton] = useState<{ x: number, y: number }[]>([]);
 
     useEffect(() => {
+        // Connect video element to existing camera stream
+        if (videoRef.current && handTracking.video) {
+            const stream = handTracking.video.srcObject as MediaStream;
+            if (stream) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.play().catch(e => console.log('Video play failed:', e));
+            }
+        }
+    }, []);
+
+    useEffect(() => {
         const updateSkeleton = () => {
             if (handTracking.debugInfo.landmarks.length > 0) {
                 setSkeleton(handTracking.debugInfo.landmarks);
