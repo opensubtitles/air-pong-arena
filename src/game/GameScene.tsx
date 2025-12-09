@@ -1,4 +1,4 @@
-import React, { Suspense, useRef, useEffect, useState } from 'react';
+import React, { Suspense, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Environment } from '@react-three/drei';
 import { Arena } from './Arena';
@@ -10,7 +10,6 @@ import { PhysicsController } from './PhysicsController';
 import { HUD } from '../components/HUD';
 import { KeyboardControls } from '../components/KeyboardControls';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
-import { handTracking } from '../services/HandTracking';
 
 interface GameSceneProps {
     demoMode?: boolean;
@@ -37,63 +36,9 @@ const FPSLimiter: React.FC<{ fps: number }> = ({ fps }) => {
 };
 
 export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const [skeleton, setSkeleton] = useState<{ x: number, y: number }[]>([]);
-
-    useEffect(() => {
-        // Connect video element to existing camera stream
-        if (videoRef.current && handTracking.video) {
-            const stream = handTracking.video.srcObject as MediaStream;
-            if (stream) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.play().catch(e => console.log('Video play failed:', e));
-            }
-        }
-    }, []);
-
-    useEffect(() => {
-        const updateSkeleton = () => {
-            if (handTracking.debugInfo.landmarks.length > 0) {
-                setSkeleton(handTracking.debugInfo.landmarks);
-            }
-            requestAnimationFrame(updateSkeleton);
-        };
-        updateSkeleton();
-    }, []);
-
     return (
         <div className="w-full h-screen absolute top-0 left-0">
             {!demoMode && <HUD />}
-
-            {/* Hand Tracking Preview - Bottom Right Corner */}
-            {!demoMode && (
-                <div className="absolute bottom-4 right-4 z-50 w-64 h-48 rounded-lg overflow-hidden border-2 border-neon-blue shadow-[0_0_20px_rgba(0,243,255,0.5)]">
-                    {/* Camera Feed */}
-                    <video
-                        ref={videoRef}
-                        className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
-                        style={{ filter: 'brightness(0.7)' }}
-                    />
-
-                    {/* Hand Skeleton Overlay */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                        {/* Draw hand skeleton */}
-                        {skeleton.map((p, i) => {
-                            const isIndexFinger = i >= 5 && i <= 8;
-                            return (
-                                <circle
-                                    key={i}
-                                    cx={p.x * 100 + '%'}
-                                    cy={p.y * 100 + '%'}
-                                    r={i % 4 === 0 ? 4 : 3}
-                                    fill={isIndexFinger ? '#FFFF00' : '#FFFFFF'}
-                                    opacity={isIndexFinger ? 0.7 : 1}
-                                />
-                            );
-                        })}
-                    </svg>
-                </div>
-            )}
 
             <div className="w-full h-full -z-10">
                 <Canvas
