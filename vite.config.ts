@@ -21,5 +21,5 @@ export default defineConfig({
     host: true,
     port: 5173
   },
-  base: './', // Essential for GitHub Pages relative paths
+  base: '/air-pong-arena/', // Essential for GitHub Pages relative paths
 })
