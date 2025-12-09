@@ -455,7 +455,16 @@ export const Calibration: React.FC = () => {
     const handsDetected = () => handTracking.debugInfo.handsDetected;
 
     // Skeleton Helper
-    // MediaPipe Hand Connections (Indices)
+    // Colors for fingers (Thumb to Pinky)
+    const fingerColors = [
+        '#FFFFFF', // 0: Wrist
+        '#FF0000', '#FF0000', '#FF0000', '#FF0000', // 1-4: Thumb (Red)
+        '#FFFF00', '#FFFF00', '#FFFF00', '#FFFF00', // 5-8: Index (Yellow)
+        '#00FF00', '#00FF00', '#00FF00', '#00FF00', // 9-12: Middle (Green)
+        '#00FFFF', '#00FFFF', '#00FFFF', '#00FFFF', // 13-16: Ring (Cyan)
+        '#FF00FF', '#FF00FF', '#FF00FF', '#FF00FF'  // 17-20: Pinky (Magenta)
+    ];
+
     const connections = [
         [0, 1], [1, 2], [2, 3], [3, 4],       // Thumb
         [0, 5], [5, 6], [6, 7], [7, 8],       // Index
@@ -464,9 +473,42 @@ export const Calibration: React.FC = () => {
         [0, 17], [17, 18], [18, 19], [19, 20] // Pinky
     ];
 
+    // Derived Status Message
+    const getStatusMessage = () => {
+        if (!cameraReady) return "Initializing Camera...";
+        if (handsDetected() === 0 && step !== 'INIT') return "NO HAND DETECTED 🕵️";
+        if (handTracking.debugInfo.handSize > 0.35) return "TOO CLOSE! MOVE BACK 🔙";
+        if (handTracking.debugInfo.handSize < 0.1 && step !== 'INIT') return "TOO FAR! MOVE CLOSER 🔎";
+
+        // Step specific
+        switch (step) {
+            case 'DISTANCE_CHECK': return "Show Hand to Start ✋";
+            case 'CENTER_OPEN': return "Center your OPEN Hand ✋";
+            case 'CENTER_FIST': return "Make a FIST in Center ✊";
+            case 'LEFT_MOVE': return "Move FIST to Left Target ⬅️";
+            case 'RIGHT_MOVE': return "Move FIST to Right Target ➡️";
+            case 'CENTER_RETURN_1':
+            case 'CENTER_RETURN_2': return "Return to Center 🎯";
+            case 'BOOST_TEACH': return "Open Palm to BOOST! ✋";
+            case 'FINAL_CONFIRM': return "Fist to Start Game! ✊";
+            case 'COMPLETE': return "GLHF! 🎮";
+            default: return msg; // Fallback
+        }
+    };
+
+    const statusMsg = getStatusMessage();
+    const isError = statusMsg.includes('NO HAND') || statusMsg.includes('TOO');
+
     return (
         <div className="absolute inset-0 z-50 bg-black/95 flex flex-col items-center justify-center text-white">
             <h2 className="text-4xl mb-2 text-neon-blue font-bold tracking-wider">DOJO TRAINING</h2>
+
+            {/* PERSISTENT STATUS BAR */}
+            <div className={`w-full max-w-2xl py-3 mb-4 rounded-lg text-center font-bold text-xl transition-colors duration-300 shadow-lg border-2
+                ${isError ? 'bg-red-600 border-red-400 animate-pulse' : 'bg-neon-blue/20 border-neon-blue'}
+            `}>
+                {statusMsg}
+            </div>
 
             {/* Error Message */}
             {cameraError && (
@@ -506,9 +548,10 @@ export const Calibration: React.FC = () => {
                                 key={i}
                                 x1={p1.x * 100 + '%'} y1={p1.y * 100 + '%'}
                                 x2={p2.x * 100 + '%'} y2={p2.y * 100 + '%'}
-                                stroke="#00F3FF"
-                                strokeWidth="3"
+                                stroke="#FFFFFF"
+                                strokeWidth="2"
                                 strokeLinecap="round"
+                                opacity="0.5"
                             />
                         );
                     })}
@@ -517,8 +560,8 @@ export const Calibration: React.FC = () => {
                             key={i}
                             cx={p.x * 100 + '%'}
                             cy={p.y * 100 + '%'}
-                            r={i % 4 === 0 ? 5 : 3}
-                            fill={i === 8 ? "#FFFF00" : "#00F3FF"} // Highlight Index Tip
+                            r={i % 4 === 0 ? 6 : 4}
+                            fill={fingerColors[i] || '#FFF'}
                         />
                     ))}
                 </svg>
@@ -539,7 +582,6 @@ export const Calibration: React.FC = () => {
                             <div className="bg-red-600 text-white font-bold px-3 py-1 rounded-full shadow-[0_0_15px_rgba(255,0,0,1)] border-2 border-white whitespace-nowrap">
                                 TOO CLOSE! 🛑
                             </div>
-                            <div className="text-red-500 font-bold text-xs mt-1 drop-shadow-md">Move Back</div>
                         </div>
                     )}
 
