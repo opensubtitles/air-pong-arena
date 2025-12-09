@@ -551,16 +551,16 @@ export const Calibration: React.FC = () => {
                         );
                     })}
                     {skeleton.map((p, i) => {
-                        // Skip Index Finger joints (5,6,7,8) completely to avoid clutter
-                        // The main Ghost Cursor tracks this finger.
-                        if (i >= 5 && i <= 8) return null;
+                        // Index Finger (5,6,7,8) rendered in YELLOW
+                        const isIndexFinger = i >= 5 && i <= 8;
                         return (
                             <circle
                                 key={i}
                                 cx={p.x * 100 + '%'}
                                 cy={p.y * 100 + '%'}
                                 r={i % 4 === 0 ? 6 : 4}
-                                fill={fingerColors[i] || '#FFF'}
+                                fill={isIndexFinger ? '#FFFF00' : (fingerColors[i] || '#FFF')}
+                                opacity={isIndexFinger ? 0.7 : 1}
                             />
                         );
                     })}
