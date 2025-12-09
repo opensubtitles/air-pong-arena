@@ -590,32 +590,21 @@ export const Calibration: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Ghost Paddle / Marker & ATTACHED PROGRESS */}
-                    {(step !== 'INIT' && cameraReady && handsDetected() > 0) && (
-                        <div
-                            className="absolute z-20 pointer-events-none"
-                            style={{
-                                left: `${ghostX * 100}%`,
-                                top: `${ghostY * 100}%`,
-                                transform: 'translate(-50%, -50%)'
-                            }}
-                        >
-                            {/* The actual cursor dot */}
-                            <div className="w-6 h-6 bg-neon-blue/80 border-2 border-white rounded-full shadow-[0_0_15px_#00F3FF]" />
-
-                            {/* Hand-Attached Progress Bar */}
-                            {progress > 0 && (
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 flex items-center justify-center">
-                                    <CircularProgress
-                                        progress={progress}
-                                        size={80}
-                                        stroke={6} // Fixed prop name
-                                        color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {/* Ghost Paddle / Marker & ATTACHED PROGRESS - REMOVED AS REQUESTED */
+                        // User requested "remove circle from index finger" -> Hiding the Ghost Cursor
+                        /*(step !== 'INIT' && cameraReady && handsDetected() > 0) && (
+                           <div
+                               className="absolute z-20 pointer-events-none"
+                               style={{
+                                   left: `${ghostX * 100}%`,
+                                   top: `${ghostY * 100}%`,
+                                   transform: 'translate(-50%, -50%)'
+                               }}
+                           >
+                                <div className="w-6 h-6 bg-neon-blue/80 border-2 border-white rounded-full shadow-[0_0_15px_#00F3FF]" />
+                           </div>
+                       )*/
+                    }
 
                     {/* Unified Central overlay for Hand Hint + Calibration Steps */}
                     <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-out
@@ -624,9 +613,21 @@ export const Calibration: React.FC = () => {
                         <div className={`relative flex flex-col items-center transition-transform duration-500
                             ${showHandHint ? 'scale-[3.0]' : 'scale-100'} 
                         `}>
-                            {/* Static Center Circle (Context only) - Progress moved to hand */}
+                            {/* Static Center Circle (Context only) */}
                             {((step === 'CENTER_OPEN' || step === 'CENTER_FIST') && !showHandHint) && (
                                 <div className="absolute rounded-full border-4 border-white/10 w-28 h-28 transform -translate-x-[0px] -translate-y-[0px] pointer-events-none" />
+                            )}
+
+                            {/* PROGRESS BAR - MOVED AROUND MAIN ICON */}
+                            {(progress > 0 && !showHandHint) && (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
+                                    <CircularProgress
+                                        progress={progress}
+                                        size={140} // Larger to frame the icon
+                                        stroke={8}
+                                        color={status === 'GREEN' ? '#00FF00' : '#FFFF00'}
+                                    />
+                                </div>
                             )}
 
                             {/* Icons (Context Aware) */}
