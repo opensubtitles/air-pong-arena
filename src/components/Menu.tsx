@@ -14,17 +14,29 @@ export const Menu: React.FC = () => {
     const setIsHost = useGameStore((state) => state.setIsHost);
 
     useEffect(() => {
-        // Try to autoplay music
-        if (audioRef.current) {
-            audioRef.current.volume = 0.3; // 30% volume
-            const playPromise = audioRef.current.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(() => {
-                    // Auto-play was prevented
-                    console.log('Autoplay prevented');
-                });
+        const tryPlay = () => {
+            if (audioRef.current) {
+                audioRef.current.volume = 0.3;
+                const playPromise = audioRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        console.log('Autoplay prevented. Waiting for interaction...');
+                    });
+                }
             }
-        }
+        };
+
+        tryPlay();
+
+        // Fallback: Play on first click
+        const handleInteraction = () => {
+            if (audioRef.current && audioRef.current.paused) {
+                audioRef.current.play().catch(console.error);
+            }
+        };
+
+        window.addEventListener('click', handleInteraction, { once: true });
+        return () => window.removeEventListener('click', handleInteraction);
     }, []);
 
     const toggleMute = () => {
