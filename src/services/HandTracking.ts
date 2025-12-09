@@ -19,7 +19,8 @@ class HandTrackingService {
         fps: 0,
         lastProcessTime: 0,
         gesture: 'None',
-        handSize: 0 // Distance between wrist (0) and middle finger MCP (9)
+        handSize: 0, // Distance between wrist (0) and middle finger MCP (9)
+        landmarks: [] as { x: number, y: number }[]
     };
 
     constructor() {
@@ -91,6 +92,9 @@ class HandTrackingService {
                 const dy = wrist.y - middleMCP.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 this.debugInfo.handSize = dist;
+
+                // Pass full skeleton for visualization
+                this.debugInfo.landmarks = landmarks.map(l => ({ x: l.x, y: l.y }));
 
                 const role = useGameStore.getState().isHost ? 'host' : 'client';
                 gamePhysics.updatePaddle(role, arenaX);

@@ -60,8 +60,7 @@ export const Calibration: React.FC = () => {
     const holdTimer = useRef(0);
     const lastTime = useRef(0);
 
-    // Logic Refs
-    const msgTimer = useRef(0); // For debouncing messages
+    const [skeleton, setSkeleton] = useState<{ x: number, y: number }[]>([]);
 
     // Ghost Paddle State
     const [ghostX, setGhostX] = useState(0.5); // 0-1 range
@@ -135,24 +134,15 @@ export const Calibration: React.FC = () => {
                 return;
             }
 
-            // Helper for debounced messages
-            const updateMsg = (m: string, s: string) => {
-                const now = Date.now();
-                if (m !== msg && (now - msgTimer.current > 500)) {
-                    setMsg(m);
-                    setSubMsg(s);
-                    msgTimer.current = now;
-                } else if (m === msg) {
-                    setSubMsg(s); // SubMsg can update faster (timer)
-                }
-            };
-
             const info = handTracking.debugInfo;
             const hands = info.handsDetected;
             const x = info.indexFingerX; // 0-1
             const y = info.indexFingerY; // Raw Y (0 top - 1 bottom)
             const size = info.handSize;  // ~0.1 to ~0.3 usually
             const gesture = info.gesture;
+            const landmarks = info.landmarks || []; // New
+
+            setSkeleton(landmarks); // Update skeleton state
 
             // Mirror X for display (This is what the user SEES as their cursor)
             const visualX = 1 - x;
@@ -166,7 +156,7 @@ export const Calibration: React.FC = () => {
 
             // Global Hand Count Check
             if (hands === 0 && step !== 'INIT') {
-                updateMsg('Show your hand!', '');
+                setMsg('Show your hand!');
                 setShowHandHint(true);
                 setSubMsg('');
                 setStatus('RED'); // Ensure Red Border
@@ -181,7 +171,16 @@ export const Calibration: React.FC = () => {
                 return;
             }
 
-
+            // --- GLOBAL TOO CLOSE CHECK ---
+            // If hand is massive (too close), nothing works well.
+            // Warn user globally.
+            if (size > 0.4 && step !== 'INIT') {
+                setMsg('TOO CLOSE! 🛑');
+                setSubMsg('Move back so we can see your whole hand');
+                setStatus('RED');
+                frameId = requestAnimationFrame(loop);
+                return;
+            }
 
             // Reset status default (will be overridden)
             let currentStatus: 'RED' | 'ORANGE' | 'GREEN' = 'RED';
@@ -195,10 +194,13 @@ export const Calibration: React.FC = () => {
                     // Need a reasonable size range.
                     // 0.05 is very far, 0.4 is very close.
                     if (size < 0.1) {
-                        updateMsg('Too Far! Move closer 🕵️', `Size: ${(size * 100).toFixed(0)}%`);
+                        setMsg('Too Far! Move closer 🕵️'); // Removing timer debounce for responsiveness
+                        setSubMsg(`Size: ${(size * 100).toFixed(0)}%`);
                         currentStatus = 'RED';
                     } else if (size > 0.35) {
-                        updateMsg('Too Close! Move back 🔙', `Size: ${(size * 100).toFixed(0)}%`);
+                        // Handled by global check mostly, but keep for specificity
+                        setMsg('Too Close! Move back 🔙');
+                        setSubMsg(`Size: ${(size * 100).toFixed(0)}%`);
                         currentStatus = 'RED';
                     } else {
                         setStep('CENTER_OPEN'); // New step
@@ -210,21 +212,23 @@ export const Calibration: React.FC = () => {
                     break;
 
                 case 'CENTER_OPEN':
-                    /* Radial Check: Must be within 0.15 of center */
+                    /* Relaxed Radial Check: 0.2 radius */
                     // Logic:
                     // 1. If Open Palm detected ANYWHERE -> ORANGE (Guide to Center)
                     // 2. If Open Palm AND Centered -> GREEN (Hold)
                     // 3. Else -> RED (Show Hand)
 
                     if (gesture === 'open_palm') {
-                        if (distFromCenter < 0.15) {
+                        if (distFromCenter < 0.2) {
                             holdTimer.current += dt;
                             currentStatus = 'GREEN';
 
                             // 2000ms hold
                             const p = Math.min((holdTimer.current / 2000) * 100, 100);
                             setProgress(p);
-                            updateMsg('Hold Open... ✋', `${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
+                            // Direct feedback
+                            setMsg('Hold Open... ✋');
+                            setSubMsg(`${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
 
                             if (holdTimer.current > 2000) {
                                 setStep('CENTER_FIST');
@@ -236,28 +240,32 @@ export const Calibration: React.FC = () => {
                         } else {
                             // Open Palm but not centered
                             currentStatus = 'ORANGE';
-                            updateMsg('Move to CENTER +', `Distance: ${(distFromCenter * 100).toFixed(0)}%`);
+                            setMsg('Move to CENTER +');
+                            setSubMsg(`Distance: ${(distFromCenter * 100).toFixed(0)}%`);
                             holdTimer.current = 0;
                             setProgress(0);
                         }
                     } else {
                         // Not showing open palm
                         currentStatus = 'RED';
-                        updateMsg('Show Open Hand ✋', '');
+                        setMsg('Show Open Hand ✋');
+                        setSubMsg('');
                         holdTimer.current = 0;
                         setProgress(0);
                     }
                     break;
 
                 case 'CENTER_FIST':
-                    if (distFromCenter < 0.15) {
+                    /* Relaxed Radial Check: 0.2 radius */
+                    if (distFromCenter < 0.2) {
                         if (gesture === 'fist') {
                             holdTimer.current += dt;
                             currentStatus = 'GREEN';
 
                             const p = Math.min((holdTimer.current / 2000) * 100, 100);
                             setProgress(p);
-                            updateMsg('Hold Steady... ✊', `${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
+                            setMsg('Hold Steady... ✊');
+                            setSubMsg(`${Math.ceil((2000 - holdTimer.current) / 1000)}s`);
 
                             if (holdTimer.current > 2000) {
                                 setStep('LEFT_MOVE');
@@ -270,14 +278,16 @@ export const Calibration: React.FC = () => {
                             // Position Good, Gesture Bad -> ORANGE
                             currentStatus = 'ORANGE';
                             // Special hint for "Almost fist" vs "Open"
-                            if (gesture === 'open_palm') updateMsg('Close your hand! ✊', 'Make a tight fist');
-                            else updateMsg('Squeeze Tighter! ✊', 'Knuckles visible?');
+                            if (gesture === 'open_palm') setMsg('Close your hand! ✊');
+                            else setMsg('Squeeze Tighter! ✊');
+                            setSubMsg('Knuckles visible?');
                             holdTimer.current = 0;
                             setProgress(0);
                         }
                     } else {
                         currentStatus = 'RED';
-                        updateMsg('Move to CENTER +', '');
+                        setMsg('Move to CENTER +');
+                        setSubMsg('');
                         holdTimer.current = 0;
                         setProgress(0);
                     }
@@ -291,7 +301,7 @@ export const Calibration: React.FC = () => {
                        User moves physically Left -> Screen Left -> visualX < 0.25
                        Range: 0.25 +/- 0.1 -> 0.15 to 0.35
                     */
-                    const inLeftRange = Math.abs(visualX - 0.25) < 0.1;
+                    const inLeftRange = Math.abs(visualX - 0.25) < 0.15; // Relaxed Range (was 0.1)
 
                     if (inLeftRange) { // Left 1/4
                         if (gesture === 'fist') {
@@ -329,7 +339,7 @@ export const Calibration: React.FC = () => {
 
                 case 'CENTER_RETURN_1':
                     // Quick center check (Radial)
-                    if (distFromCenter < 0.2) { // Slightly more forgiving than strict center
+                    if (distFromCenter < 0.25) { // Relaxed return check
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
                         if (holdTimer.current > 500) { // Fast
@@ -341,7 +351,7 @@ export const Calibration: React.FC = () => {
                         }
                     } else {
                         currentStatus = 'ORANGE'; // Guide back
-                        updateMsg('Return to CENTER ➡️', '');
+                        setMsg('Return to CENTER ➡️');
                         holdTimer.current = 0;
                         setProgress(0);
                     }
@@ -354,7 +364,7 @@ export const Calibration: React.FC = () => {
                       User moves physically Right -> Screen Right -> visualX > 0.75
                       Range: 0.75 +/- 0.1 -> 0.65 to 0.85
                    */
-                    const inRightRange = Math.abs(visualX - 0.75) < 0.1;
+                    const inRightRange = Math.abs(visualX - 0.75) < 0.15; // Relaxed Range
 
                     if (inRightRange) {
                         if (gesture === 'fist') {
@@ -385,7 +395,7 @@ export const Calibration: React.FC = () => {
                     break;
 
                 case 'CENTER_RETURN_2':
-                    if (distFromCenter < 0.2) {
+                    if (distFromCenter < 0.25) {
                         holdTimer.current += dt;
                         currentStatus = 'GREEN';
                         if (holdTimer.current > 500) {
@@ -396,8 +406,8 @@ export const Calibration: React.FC = () => {
                             setProgress(0);
                         }
                     } else {
-                        currentStatus = 'ORANGE';
-                        updateMsg('Return to CENTER ⬅️', '');
+                        currentStatus = 'RED';
+                        setMsg('Return to CENTER ⬅️');
                         holdTimer.current = 0;
                         setProgress(0);
                     }
@@ -443,6 +453,16 @@ export const Calibration: React.FC = () => {
 
     const handsDetected = () => handTracking.debugInfo.handsDetected;
 
+    // Skeleton Helper
+    // MediaPipe Hand Connections (Indices)
+    const connections = [
+        [0, 1], [1, 2], [2, 3], [3, 4],       // Thumb
+        [0, 5], [5, 6], [6, 7], [7, 8],       // Index
+        [0, 9], [9, 10], [10, 11], [11, 12],  // Middle
+        [0, 13], [13, 14], [14, 15], [15, 16],// Ring
+        [0, 17], [17, 18], [18, 19], [19, 20] // Pinky
+    ];
+
     return (
         <div className="absolute inset-0 z-50 bg-black/95 flex flex-col items-center justify-center text-white">
             <h2 className="text-4xl mb-2 text-neon-blue font-bold tracking-wider">DOJO TRAINING</h2>
@@ -474,12 +494,41 @@ export const Calibration: React.FC = () => {
                     muted
                 />
 
+                {/* SKELETON OVERLAY */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none -scale-x-100">
+                    {skeleton.length > 0 && connections.map(([start, end], i) => {
+                        const p1 = skeleton[start];
+                        const p2 = skeleton[end];
+                        if (!p1 || !p2) return null;
+                        return (
+                            <line
+                                key={i}
+                                x1={p1.x * 100 + '%'} y1={p1.y * 100 + '%'}
+                                x2={p2.x * 100 + '%'} y2={p2.y * 100 + '%'}
+                                stroke="#00F3FF"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                opacity="0.8"
+                            />
+                        );
+                    })}
+                    {skeleton.map((p, i) => (
+                        <circle
+                            key={i}
+                            cx={p.x * 100 + '%'}
+                            cy={p.y * 100 + '%'}
+                            r={i % 4 === 0 ? 5 : 3}
+                            fill={i === 8 ? "#FFFF00" : "#00F3FF"} // Highlight Index Tip
+                        />
+                    ))}
+                </svg>
+
                 {/* Overlays */}
                 <div className="absolute inset-0 pointer-events-none">
                     {/* Ghost Paddle / Marker */}
                     {(step !== 'INIT' && cameraReady) && (
                         <div
-                            className="absolute bg-neon-blue/80 w-4 h-4 rounded-full shadow-[0_0_10px_#00F3FF]"
+                            className="absolute bg-neon-blue/80 w-6 h-6 border-2 border-white rounded-full shadow-[0_0_15px_#00F3FF] z-10"
                             style={{
                                 left: `${ghostX * 100}%`,
                                 top: `${ghostY * 100}%`,
@@ -498,10 +547,15 @@ export const Calibration: React.FC = () => {
                         `}>
                             {/* Circular Progress (Shared CENTER) */}
                             {((step === 'CENTER_OPEN' || step === 'CENTER_FIST') && !showHandHint) && (
-                                <CircularProgress
-                                    progress={progress}
-                                    color={step === 'CENTER_FIST' ? '#F0F' : '#00F3FF'}
-                                />
+                                <>
+                                    {/* Background Circle (Always visible for context) */}
+                                    <div className="absolute rounded-full border-4 border-white/10 w-28 h-28 transform -translate-x-[0px] -translate-y-[0px] pointer-events-none" />
+
+                                    <CircularProgress
+                                        progress={progress}
+                                        color={step === 'CENTER_FIST' ? '#F0F' : '#00F3FF'}
+                                    />
+                                </>
                             )}
 
                             {/* Icons (Context Aware) */}
@@ -540,7 +594,8 @@ export const Calibration: React.FC = () => {
                             {/* Target Icon (Solid) at Midpoint (Left 1/4) */}
                             <div className="absolute left-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse -translate-x-full pr-8">
                                 <div className="relative">
-                                    {/* Side Progress */}
+                                    {/* Background Circle */}
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white/10 w-24 h-24" />
                                     <CircularProgress progress={progress} color="#FFFF00" size={100} />
                                     <div className="text-6xl text-neon-yellow scale-x-[-1] relative">✊</div>
                                 </div>
@@ -558,7 +613,7 @@ export const Calibration: React.FC = () => {
                             {/* Target Icon (Solid) at Midpoint (Right 1/4) */}
                             <div className="absolute right-1/4 top-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse translate-x-full pl-8">
                                 <div className="relative">
-                                    {/* Side Progress */}
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white/10 w-24 h-24" />
                                     <CircularProgress progress={progress} color="#FFFF00" size={100} />
                                     <div className="text-6xl text-neon-yellow scale-x-[-1] relative">✊</div>
                                 </div>
