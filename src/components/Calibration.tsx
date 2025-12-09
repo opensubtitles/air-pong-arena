@@ -417,10 +417,18 @@ export const Calibration: React.FC = () => {
 
 
                 case 'FINAL_CONFIRM':
-                    if (gesture === 'fist') {
+                    // Require fist in center position
+                    if (distFromCenter < 0.25 && gesture === 'fist') {
+                        currentStatus = 'GREEN';
                         setStep('COMPLETE');
                         setMsg('GO! 🏁');
                         setTimeout(() => setPhase('PLAYING'), 1000);
+                    } else if (gesture !== 'fist') {
+                        currentStatus = 'ORANGE';
+                        setSubMsg('Make a fist! ✊');
+                    } else {
+                        currentStatus = 'ORANGE';
+                        setSubMsg('Move to center!');
                     }
                     break;
             }
