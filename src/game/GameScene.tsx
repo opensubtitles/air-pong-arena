@@ -42,7 +42,14 @@ export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
     // Initialize hand tracking for gameplay
     useEffect(() => {
         if (!demoMode && videoRef.current && !handTracking.debugInfo.initialized) {
-            handTracking.startWebcam(videoRef.current);
+            // Delay webcam start to prevent WebGL context conflict
+            const timer = setTimeout(() => {
+                if (videoRef.current) {
+                    handTracking.startWebcam(videoRef.current);
+                }
+            }, 1000); // 1 second delay
+
+            return () => clearTimeout(timer);
         }
     }, [demoMode]);
 
