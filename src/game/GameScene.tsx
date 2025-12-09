@@ -1,5 +1,5 @@
 import React, { Suspense, useRef, useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Environment } from '@react-three/drei';
 import { Arena } from './Arena';
 import { Ball } from './Ball';
@@ -15,6 +15,26 @@ import { handTracking } from '../services/HandTracking';
 interface GameSceneProps {
     demoMode?: boolean;
 }
+
+// FPS Limiter component for demo mode
+const FPSLimiter: React.FC<{ fps: number }> = ({ fps }) => {
+    const lastFrameTime = useRef(performance.now());
+    const frameInterval = 1000 / fps;
+
+    useFrame((state) => {
+        const now = performance.now();
+        const delta = now - lastFrameTime.current;
+
+        if (delta < frameInterval) {
+            // Skip this frame
+            return;
+        }
+
+        lastFrameTime.current = now - (delta % frameInterval);
+    });
+
+    return null;
+};
 
 export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -85,8 +105,9 @@ export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
                         depth: false,
                         powerPreference: demoMode ? 'low-power' : 'high-performance'
                     }}
-                    frameloop={demoMode ? 'demand' : 'always'} // Render on demand in demo mode
+                    frameloop="always"
                 >
+                    {demoMode && <FPSLimiter fps={30} />}
                     <PhysicsController />
                     {!demoMode && <KeyboardControls />}
 
@@ -99,8 +120,8 @@ export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
 
                     <Suspense fallback={null}>
                         <Environment preset="city" />
-                        {/* Reduce stars in demo mode */}
-                        <Stars radius={100} depth={50} count={demoMode ? 1000 : 5000} factor={4} saturation={0} fade speed={1} />
+                        {/* Reduce stars in demo mode for better performance */}
+                        <Stars radius={100} depth={50} count={demoMode ? 2000 : 5000} factor={4} saturation={0} fade speed={1} />
 
                         <Arena />
 
