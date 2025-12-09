@@ -1,26 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { networkManager } from '../services/NetworkManager';
 import { soundManager } from '../services/SoundManager';
-import { User, PlusSquare, LogIn, Hash } from 'lucide-react'; // Icons
+import { User, PlusSquare, LogIn, Hash, Volume2, VolumeX } from 'lucide-react'; // Icons
 
 export const Menu: React.FC = () => {
     const [joinCode, setJoinCode] = useState('');
+    const [isMuted, setIsMuted] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
+
     const setPhase = useGameStore((state) => state.setPhase);
     const setGameMode = useGameStore((state) => state.setGameMode);
     const setIsHost = useGameStore((state) => state.setIsHost);
 
+    useEffect(() => {
+        // Try to autoplay music
+        if (audioRef.current) {
+            audioRef.current.volume = 0.3; // 30% volume
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // Auto-play was prevented
+                    console.log('Autoplay prevented');
+                });
+            }
+        }
+    }, []);
+
+    const toggleMute = () => {
+        if (audioRef.current) {
+            audioRef.current.muted = !audioRef.current.muted;
+            setIsMuted(!isMuted);
+        }
+    };
+
     const handleSinglePlayer = () => {
         soundManager.init();
         setGameMode('SINGLE_PLAYER');
-        setIsHost(true); // You are the host of the local game
+        setIsHost(true);
         setPhase('CALIBRATION');
     };
 
     const handleCreate = () => {
         soundManager.init();
         networkManager.connect();
-        // Small delay to ensure socket connects
         setTimeout(() => {
             networkManager.createRoom();
             setPhase('LOBBY');
@@ -39,6 +62,16 @@ export const Menu: React.FC = () => {
 
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-transparent text-white font-mono z-10 relative">
+            <audio ref={audioRef} src="./sounds/menu_theme.mp3" loop />
+
+            <button
+                onClick={toggleMute}
+                className="absolute top-4 right-4 text-neon-blue hover:text-white transition-colors"
+                title="Toggle Music"
+            >
+                {isMuted ? <VolumeX size={32} /> : <Volume2 size={32} />}
+            </button>
+
             <h1 className="text-6xl font-bold mb-12 text-neon-blue drop-shadow-[0_0_15px_rgba(0,243,255,0.7)]">
                 AIR PONG ARENA
             </h1>
