@@ -6,7 +6,7 @@ import { gamePhysics } from './GamePhysics';
 export const PowerUpRenderer: React.FC = () => {
     const meshRef = useRef<Mesh>(null);
 
-    useFrame((state, delta) => {
+    useFrame((_, delta) => {
         const powerUp = gamePhysics.activePowerUp;
         if (powerUp && meshRef.current) {
             meshRef.current.visible = true;
