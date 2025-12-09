@@ -23,6 +23,7 @@ interface GameState {
     scores: { host: number; client: number };
     error: string | null;
     debugMode: boolean;
+    isMuted: boolean; // New Persistent State
 
     // Actions
     setPhase: (phase: GamePhase) => void;
@@ -37,6 +38,7 @@ interface GameState {
     setScores: (scores: { host: number; client: number }) => void;
     setError: (error: string | null) => void;
     toggleDebugMode: () => void;
+    toggleMute: () => void; // New Action
     reset: () => void;
 }
 
@@ -50,32 +52,32 @@ export const useGameStore = create<GameState>((set) => ({
     scores: { host: 0, client: 0 },
     error: null,
     debugMode: false,
+    isMuted: localStorage.getItem('air_pong_muted') === 'true', // Init from Storage
 
     setPhase: (phase) => set({ phase }),
-    setGameMode: (mode) => set({ gameMode: mode }),
+    setGameMode: (gameMode) => set({ gameMode }),
     setRoomId: (roomId) => set({ roomId }),
-    setPlayerId: (id) => set({ playerId: id }),
+    setPlayerId: (playerId) => set({ playerId }),
     setIsHost: (isHost) => set({ isHost }),
-    addPlayer: (player) => set((state) => ({
-        players: { ...state.players, [player.id]: player }
-    })),
+    addPlayer: (player) => set((state) => ({ players: { ...state.players, [player.id]: player } })),
     removePlayer: (id) => set((state) => {
-        const { [id]: _, ...rest } = state.players;
-        return { players: rest };
+        const newPlayers = { ...state.players };
+        delete newPlayers[id];
+        return { players: newPlayers };
     }),
     setPlayerReady: (id, ready) => set((state) => ({
-        players: {
-            ...state.players,
-            [id]: { ...state.players[id], ready }
-        }
+        players: { ...state.players, [id]: { ...state.players[id], ready } }
     })),
-    incrementScore: (role) => set((state) => ({
-        scores: { ...state.scores, [role]: state.scores[role] + 1 }
-    })),
+    incrementScore: (role) => set((state) => ({ scores: { ...state.scores, [role]: state.scores[role] + 1 } })),
     setScores: (scores) => set({ scores }),
     setError: (error) => set({ error }),
     toggleDebugMode: () => set((state) => ({ debugMode: !state.debugMode })),
-    reset: () => set({
+    toggleMute: () => set((state) => {
+        const newValue = !state.isMuted;
+        localStorage.setItem('air_pong_muted', String(newValue));
+        return { isMuted: newValue };
+    }),
+    reset: () => set((state) => ({
         phase: 'MENU',
         gameMode: 'MULTIPLAYER',
         roomId: null,
@@ -83,6 +85,7 @@ export const useGameStore = create<GameState>((set) => ({
         isHost: false,
         players: {},
         scores: { host: 0, client: 0 },
-        error: null
-    })
+        error: null,
+        isMuted: state.isMuted // Preserve mute state on reset
+    })),
 }));

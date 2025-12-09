@@ -1,50 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { networkManager } from '../services/NetworkManager';
 import { soundManager } from '../services/SoundManager';
-import { User, PlusSquare, LogIn, Hash, Volume2, VolumeX } from 'lucide-react'; // Icons
+import { User, PlusSquare, LogIn, Hash } from 'lucide-react'; // Icons
 
 export const Menu: React.FC = () => {
     const [joinCode, setJoinCode] = useState('');
-    const [isMuted, setIsMuted] = useState(false);
-    const audioRef = useRef<HTMLAudioElement>(null);
-
     const setPhase = useGameStore((state) => state.setPhase);
     const setGameMode = useGameStore((state) => state.setGameMode);
     const setIsHost = useGameStore((state) => state.setIsHost);
-
-    const [showAudioPrompt, setShowAudioPrompt] = useState(false);
-
-    useEffect(() => {
-        const tryPlay = () => {
-            if (audioRef.current) {
-                audioRef.current.volume = 0.3;
-                const playPromise = audioRef.current.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        console.log('Autoplay prevented. Showing prompt.');
-                        setShowAudioPrompt(true);
-                    });
-                }
-            }
-        };
-
-        tryPlay();
-    }, []);
-
-    const handleInteraction = () => {
-        if (audioRef.current) {
-            audioRef.current.play().catch(console.error);
-            setShowAudioPrompt(false);
-        }
-    };
-
-    const toggleMute = () => {
-        if (audioRef.current) {
-            audioRef.current.muted = !audioRef.current.muted;
-            setIsMuted(!isMuted);
-        }
-    };
 
     const handleSinglePlayer = () => {
         soundManager.init();
@@ -74,28 +38,6 @@ export const Menu: React.FC = () => {
 
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-transparent text-white font-mono z-10 relative">
-            <audio ref={audioRef} src="./sounds/menu_theme.mp3" loop />
-
-            {/* Autoplay Overlay */}
-            {showAudioPrompt && (
-                <div
-                    className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm animate-in fade-in duration-300"
-                    onClick={handleInteraction}
-                >
-                    <p className="text-4xl font-black text-neon-green animate-pulse tracking-widest drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">
-                        TAP TO START
-                    </p>
-                </div>
-            )}
-
-            <button
-                onClick={toggleMute}
-                className="absolute top-4 right-4 text-neon-blue hover:text-white transition-colors"
-                title="Toggle Music"
-            >
-                {isMuted ? <VolumeX size={32} /> : <Volume2 size={32} />}
-            </button>
-
             <h1 className="text-6xl font-bold mb-12 text-neon-blue drop-shadow-[0_0_15px_rgba(0,243,255,0.7)]">
                 AIR PONG ARENA
             </h1>
