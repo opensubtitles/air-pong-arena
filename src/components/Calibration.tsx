@@ -50,6 +50,7 @@ export const Calibration: React.FC = () => {
     const [showHandHint, setShowHandHint] = useState(false);
 
     const setPhase = useGameStore((state) => state.setPhase);
+    const gameMode = useGameStore((state) => state.gameMode);
 
     // State for hold timers
     const holdTimer = useRef(0);
