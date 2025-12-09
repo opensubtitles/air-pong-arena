@@ -71,6 +71,11 @@ class HandTrackingService {
             this.debugInfo.handsDetected = results.landmarks.length;
             this.debugInfo.lastProcessTime = processTime;
 
+            // Debug logging
+            if (Math.random() < 0.01) { // Log 1% of frames to avoid spam
+                console.log('HandTracking: detected', results.landmarks.length, 'hands');
+            }
+
             // Simple FPS
             this.debugInfo.fps = 1000 / (processTime + 1);
 
@@ -88,18 +93,24 @@ class HandTrackingService {
                 // Calculate Scale/Distance (Wrist 0 to Middle MCP 9)
                 const wrist = landmarks[0];
                 const middleMCP = landmarks[9];
-                const dx = wrist.x - middleMCP.x;
-                const dy = wrist.y - middleMCP.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                this.debugInfo.handSize = dist;
+                const dx = middleMCP.x - wrist.x;
+                const dy = middleMCP.y - wrist.y;
+                const dz = middleMCP.z - wrist.z;
+                const handSize = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-                // Pass full skeleton for visualization
-                this.debugInfo.landmarks = landmarks.map(l => ({ x: l.x, y: l.y }));
+                this.debugInfo.handSize = handSize;
+
+                // Store landmarks for skeleton rendering
+                this.debugInfo.landmarks = landmarks.map(lm => ({ x: lm.x, y: lm.y }));
 
                 const role = useGameStore.getState().isHost ? 'host' : 'client';
                 gamePhysics.updatePaddle(role, arenaX);
 
                 // --- GESTURE RECOGNITION (Fingerpose) ---
+                // The original code used fp.GestureEstimator with landmarks.
+                // The provided snippet suggests a different GestureEstimator and worldLandmarks.
+                // To maintain functionality with the existing setup, we'll stick to fp.GestureEstimator
+                // and map landmarks to the format it expects.
                 const fpLandmarks = landmarks.map(l => [l.x, l.y, l.z]);
                 const estimation = this.gestureEstimator.estimate(fpLandmarks, 8.5);
 
