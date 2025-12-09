@@ -75,6 +75,11 @@ class HandTrackingService {
 
         const startTimeMs = performance.now();
 
+        // Log video time to verify it's playing
+        if (Math.random() < 0.02) { // Log 2% of frames
+            console.log('Video time:', this.video.currentTime.toFixed(2), 'Ready state:', this.video.readyState);
+        }
+
         // Detect hands from video
         const results = this.handLandmarker.detectForVideo(this.video, startTimeMs);
 
