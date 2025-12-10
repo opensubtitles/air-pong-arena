@@ -133,7 +133,18 @@ export const useGameStore = create<GameState>((set) => ({
         };
     }),
     clearEffects: () => set({ activeEffects: { host: {}, client: {} } }),
-    showNotification: (text, color) => set({ notification: { text, color, id: Date.now() } }),
+    showNotification: (text, color) => {
+        set({ notification: { text, color, id: Date.now() } });
+        setTimeout(() => {
+            // Only clear if it's the same notification ID to avoid race conditions
+            set((state) => {
+                if (state.notification && Date.now() - state.notification.id >= 1400) {
+                    return { notification: null };
+                }
+                return {};
+            });
+        }, 1500);
+    },
     triggerInventoryShake: () => set({ inventoryShake: Date.now() }),
 
     reset: () => set((state) => ({

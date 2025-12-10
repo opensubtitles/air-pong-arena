@@ -80,8 +80,8 @@ export const HUD: React.FC = () => {
 
             {/* Notification Toast */}
             {useGameStore.getState().notification && (
-                <div key={useGameStore.getState().notification?.id} className="absolute top-1/4 w-full flex justify-center pointer-events-none">
-                    <div className="animate-bounce-in bg-black/80 border-y-4 border-white text-white text-4xl font-black italic tracking-widest px-12 py-4 shadow-[0_0_50px_rgba(255,255,255,0.5)] transform -skew-x-12"
+                <div key={useGameStore.getState().notification?.id} className="absolute top-1/4 w-full flex justify-center pointer-events-none z-50">
+                    <div className="animate-bounce-in bg-black/50 border-y-2 border-white/50 text-white/90 text-2xl font-black italic tracking-widest px-12 py-2 shadow-[0_0_20px_rgba(255,255,255,0.2)] transform -skew-x-12 backdrop-blur-sm"
                         style={{ borderColor: useGameStore.getState().notification?.color || '#fff', color: useGameStore.getState().notification?.color || '#fff' }}>
                         {useGameStore.getState().notification?.text}
                     </div>

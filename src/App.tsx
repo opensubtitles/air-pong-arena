@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
+import { soundManager } from './services/SoundManager';
 import { Menu } from './components/Menu';
 import { Lobby } from './components/Lobby';
 import { Calibration } from './components/Calibration';
@@ -17,36 +18,43 @@ function App() {
 
   // Audio Ref and Prompt State
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [showAudioPrompt, setShowAudioPrompt] = useState(false);
+  const [showAudioPrompt, setShowAudioPrompt] = useState(true); // Force true initially
 
   // Attempt Autoplay whenever phase or track changes
   useEffect(() => {
-    const tryPlay = async () => {
+    // Basic check for interaction requirement
+    const checkAudio = async () => {
+      // If we haven't interacted yet, keep prompt open
+      if (showAudioPrompt) return;
+
       if (audioRef.current) {
         if (isMuted) {
           audioRef.current.pause();
-          setShowAudioPrompt(false); // No prompt if muted
           return;
         }
-
         audioRef.current.volume = (phase === 'CALIBRATION' || phase === 'MENU' || phase === 'LOBBY') ? 0.3 : 0.4;
         try {
           await audioRef.current.play();
-          setShowAudioPrompt(false); // Success
         } catch (err) {
-          console.log('Autoplay blocked:', err);
-          setShowAudioPrompt(true); // Show overlay
+          console.log("Autoplay failed, showing prompt");
+          setShowAudioPrompt(true);
         }
       }
     };
-    tryPlay();
-  }, [phase, gameMode, isMuted]); // Re-run if track changes
+    checkAudio();
+  }, [phase, gameMode, isMuted, showAudioPrompt]);
 
   const handleUnlockAudio = () => {
+    // Resume global context
+    soundManager.init();
+
+    // Play background music
     if (audioRef.current) {
       audioRef.current.play().then(() => {
         setShowAudioPrompt(false);
       }).catch(console.error);
+    } else {
+      setShowAudioPrompt(false);
     }
   };
 
@@ -64,13 +72,16 @@ function App() {
       </button>
 
       {/* Audio Unlock Overlay */}
-      {showAudioPrompt && !isMuted && (
+      {showAudioPrompt && (
         <div
-          className="absolute inset-0 z-[200] bg-black/80 flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm animate-in fade-in duration-300"
+          className="absolute inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center cursor-pointer backdrop-blur-md animate-in fade-in duration-300"
           onClick={handleUnlockAudio}
         >
           <p className="text-4xl font-black text-neon-green animate-pulse tracking-widest drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">
             TAP TO START
+          </p>
+          <p className="text-gray-400 mt-4 text-sm font-mono">
+            Enable Audio & Initialize
           </p>
         </div>
       )}

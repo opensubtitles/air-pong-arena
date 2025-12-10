@@ -209,6 +209,21 @@ class GamePhysics {
                 }
             }
         });
+
+        // Global Physics Modifiers (Magnet)
+        this.GAME_ROLES.forEach(role => {
+            if (this.hasEffect(state, role, PowerUpType.MAGNET_PADDLE)) {
+                // If ball is on their side (Host > 0, Client < 0)
+                const isSide = (role === 'host' && this.ballPosition.z > 0) || (role === 'client' && this.ballPosition.z < 0);
+                if (isSide) {
+                    // Pull X towards paddle X
+                    const paddleX = this.paddles[role];
+                    const diffX = paddleX - this.ballPosition.x;
+                    // Force gets stronger as it gets closer in Z?
+                    this.ballVelocity.x += diffX * 2 * delta;
+                }
+            }
+        });
     }
 
     hasEffect(state: any, role: string, type: PowerUpType): boolean {
@@ -218,6 +233,30 @@ class GamePhysics {
 
     scorePoint(winner: 'host' | 'client') {
         const state = useGameStore.getState();
+
+        // Shield Check? 
+        // If 'winner' scored, it means 'loser' missed.
+        const loser = winner === 'host' ? 'client' : 'host';
+
+        if (this.hasEffect(state, loser, PowerUpType.SHIELD)) {
+            // Block Goal!
+            soundManager.playBounce(); // Or shield protect sound
+            state.showNotification("SHIELD BLOCKED GOAL!", "#0000FF");
+
+            // Remove Shield
+            state.removeActiveEffect(loser, PowerUpType.SHIELD);
+
+            // Reset Ball to center or bounce back?
+            // Bounce back is cooler:
+            this.ballVelocity.z *= -1;
+            this.ballVelocity.multiplyScalar(0.5); // Slow down
+
+            // Push out of goal area to avoid instant re-trigger
+            this.ballPosition.z = loser === 'host' ? 14 : -14;
+
+            return; // SAVE!
+        }
+
         // Check Multiplier
         let points = 1;
         if (this.hasEffect(state, winner, PowerUpType.SCORE_MULTIPLIER)) points = 2;
@@ -263,13 +302,30 @@ class GamePhysics {
 
     // --- INPUT ACTIONS ---
 
+    // --- INPUT ACTIONS ---
+
+    // Input History for Delay Effect
+    private inputHistory: { host: number[], client: number[] } = { host: [], client: [] };
+
     updatePaddle(role: 'host' | 'client', rawX: number) {
         const state = useGameStore.getState();
 
-        // Effect: Invert Controls
+        // Effect: Delay (Lag Spike)
+        // Store current input
+        this.inputHistory[role].push(rawX);
+        if (this.inputHistory[role].length > 60) this.inputHistory[role].shift(); // Keep buffer
+
         let effectiveX = rawX;
+
+        if (this.hasEffect(state, role, PowerUpType.DELAY)) {
+            // Read from 15 frames ago (~250ms delay at 60fps)
+            const delayedIndex = Math.max(0, this.inputHistory[role].length - 15);
+            effectiveX = this.inputHistory[role][delayedIndex] || rawX;
+        }
+
+        // Effect: Invert Controls
         if (this.hasEffect(state, role, PowerUpType.INVERT_CONTROLS)) {
-            effectiveX = -rawX;
+            effectiveX = -effectiveX;
         }
 
         // Effect: Freeze
@@ -281,6 +337,17 @@ class GamePhysics {
         if (this.hasEffect(state, role, PowerUpType.JITTER)) {
             effectiveX += (Math.random() - 0.5) * 2;
         }
+
+        // Effect: Slow Paddle (Lerp to position instead of instant)
+        if (this.hasEffect(state, role, PowerUpType.SLOW_PADDLE)) {
+            const current = this.paddles[role];
+            const speed = 0.05; // Very slow catchup
+            effectiveX = current + (effectiveX - current) * speed;
+        }
+
+        // Effect: Magnet Paddle (Attract Ball)
+        // This is actually Physics, not paddle input, but paddle affects ball.
+        // Let's handle Magnet in the main update loop or here? Main update loop is better for ball force.
 
         this.paddles[role] = effectiveX;
     }
