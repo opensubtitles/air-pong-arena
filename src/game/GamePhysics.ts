@@ -21,6 +21,15 @@ class GamePhysics {
 
     private lastUpdate = 0;
 
+    // Constants
+    private readonly GAME_ROLES = ['host', 'client'] as const;
+    private readonly POWER_UP_TYPES = Object.values(PowerUpType);
+
+    // AI Difficulty Settings (Noob -> Impossible)
+    private readonly AI_SPEED = [0.5, 1.5, 3.0, 4.5, 8.0];
+    private readonly AI_ERROR_CHANCE = [0.4, 0.3, 0.2, 0.1, 0.0];
+    private readonly AI_ERROR_MAGNITUDE = [3, 2, 1.5, 0.5, 0];
+
     constructor() {
         this.resetBall();
     }
@@ -29,10 +38,9 @@ class GamePhysics {
         const state = useGameStore.getState();
 
         // --- POWER UP SPAWNING ---
-        // Chance to spawn if none exists. check timer in real app, random for now
-        if (!this.activePowerUp && state.phase === 'PLAYING' && Math.random() < 0.002) { // tuned for gameplay
-            const types = Object.values(PowerUpType);
-            const randomType = types[Math.floor(Math.random() * types.length)];
+        // Chance to spawn if none exists.
+        if (!this.activePowerUp && state.phase === 'PLAYING' && Math.random() < 0.002) {
+            const randomType = this.POWER_UP_TYPES[Math.floor(Math.random() * this.POWER_UP_TYPES.length)];
 
             this.activePowerUp = {
                 position: new Vector3((Math.random() - 0.5) * 10, 0.5, (Math.random() - 0.5) * 5), // Closer to center Z
@@ -46,6 +54,8 @@ class GamePhysics {
         // --- AI LOGIC (Single Player) ---
         if (state.gameMode === 'SINGLE_PLAYER') {
             const difficulty = state.difficulty; // 1 to 5
+            const levelIndex = Math.max(0, Math.min(difficulty - 1, 4));
+
             const isConfused = this.hasEffect(state, 'client', PowerUpType.INVERT_CONTROLS);
             const isFrozen = this.hasEffect(state, 'client', PowerUpType.FREEZE);
             const isJitter = this.hasEffect(state, 'client', PowerUpType.JITTER);
@@ -54,20 +64,16 @@ class GamePhysics {
                 let targetX = this.ballPosition.x;
 
                 // Difficulty Tuning
-                // Speed: 0.5 (Noob) to 6.0 (Impossible)
-                const baseSpeed = [0.5, 1.5, 3.0, 4.5, 8.0][difficulty - 1] || 3.0;
-
-                // Error Margin (Offset from center ball): High for Noob, 0 for Impossible
-                const errorChance = [0.4, 0.3, 0.2, 0.1, 0.0][difficulty - 1] || 0.1;
-                const errorMagnitude = [3, 2, 1.5, 0.5, 0][difficulty - 1] || 1.0;
-
-                // Reaction Delay (Simulated by only updating target sometimes? Or just slow lerp covers it)
+                const baseSpeed = this.AI_SPEED[levelIndex] || 3.0;
+                const errorChance = this.AI_ERROR_CHANCE[levelIndex] || 0.1;
+                const errorMagnitude = this.AI_ERROR_MAGNITUDE[levelIndex] || 1.0;
 
                 // Apply Effects
                 if (isConfused) targetX *= -1;
                 if (isJitter) targetX += (Math.random() - 0.5) * 4;
 
-                // Simulate Mistakes/Imperfection
+                // Simulate Mistakes/Imperfection (Random per frame is chaotic, but works for "twitchy" AI)
+                // Better AI would calculate specific error target per hit, but this suffices for arcade feel
                 if (Math.random() < errorChance) {
                     targetX += (Math.random() - 0.5) * errorMagnitude;
                 }
@@ -179,7 +185,7 @@ class GamePhysics {
         this.paddleWidths.client = this.defaultPaddleWidth;
 
         // Apply Logic for both roles
-        (['host', 'client'] as const).forEach(role => {
+        this.GAME_ROLES.forEach(role => {
             const effects = state.activeEffects[role];
             const now = Date.now();
 
@@ -307,7 +313,7 @@ class GamePhysics {
         }
     }
 
-    applyInstantEffect(state: any, role: 'host' | 'client', type: PowerUpType) {
+    applyInstantEffect(state: any, _role: 'host' | 'client', type: PowerUpType) {
         if (type === PowerUpType.MULTI_BALL) {
             // Placeholder: Just warn
             state.showNotification("MULTI BALL! (Speed Boost)", "#FFFF00");

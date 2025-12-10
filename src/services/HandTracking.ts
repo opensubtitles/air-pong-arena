@@ -125,9 +125,8 @@ class HandTrackingService {
         const startTimeMs = performance.now();
 
         // Log video state to verify it's playing
-        if (Math.random() < 0.02) { // Log 2% of frames
-            console.log('Video time:', this.video.currentTime.toFixed(2), 'Paused:', this.video.paused, 'Ready:', this.video.readyState);
-        }
+        // Debug only
+        // if (Math.random() < 0.02) console.log(...)
 
         // Detect hands from video
         const results = this.handLandmarker.detectForVideo(this.video, startTimeMs);
@@ -137,12 +136,6 @@ class HandTrackingService {
 
         this.debugInfo.handsDetected = results.landmarks.length;
         this.debugInfo.lastProcessTime = processTime;
-
-        // Debug logging
-        if (Math.random() < 0.01) { // Log 1% of frames to avoid spam
-            console.log('HandTracking: detected', results.landmarks.length, 'hands');
-        }
-
         // Simple FPS
         this.debugInfo.fps = 1000 / (processTime + 1);
 
@@ -156,11 +149,6 @@ class HandTrackingService {
 
             this.debugInfo.indexFingerX = indexFinger.x; // Raw X
             this.debugInfo.indexFingerY = indexFinger.y; // Raw Y
-
-            // More frequent logging to debug position tracking
-            if (Math.random() < 0.05) { // Log 5% of frames
-                console.log('Hand position:', indexFinger.x.toFixed(3), indexFinger.y.toFixed(3), 'Arena X:', arenaX.toFixed(2));
-            }
 
             // Calculate Scale/Distance (Wrist 0 to Middle MCP 9)
             const wrist = landmarks[0];
