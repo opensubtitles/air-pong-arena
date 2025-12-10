@@ -9,6 +9,8 @@ export const Menu: React.FC = () => {
     const setPhase = useGameStore((state) => state.setPhase);
     const setGameMode = useGameStore((state) => state.setGameMode);
     const setIsHost = useGameStore((state) => state.setIsHost);
+    const difficulty = useGameStore((state) => state.difficulty);
+    const setDifficulty = useGameStore((state) => state.setDifficulty);
 
     const handleSinglePlayer = () => {
         soundManager.init();
@@ -43,6 +45,28 @@ export const Menu: React.FC = () => {
             </h1>
 
             <div className="space-y-4 w-64">
+                {/* Difficulty Selector */}
+                <div className="flex flex-col items-center space-y-2 mb-6 w-full">
+                    <span className="text-neon-yellow text-xs tracking-widest font-bold self-start pl-1">
+                        DIFFICULTY: {['', 'NOOB', 'EASY', 'MEDIUM', 'HARD', 'IMPOSSIBLE'][difficulty]}
+                    </span>
+                    <div className="flex w-full gap-2">
+                        {[1, 2, 3, 4, 5].map(level => (
+                            <button
+                                key={level}
+                                onClick={() => setDifficulty(level)}
+                                className={`flex-1 aspect-square rounded font-bold text-xl transition-all border-2 flex items-center justify-center
+                                     ${difficulty === level
+                                        ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.8)] scale-110'
+                                        : 'bg-black/50 text-gray-500 border-gray-700 hover:border-white hover:text-white'
+                                    }`}
+                            >
+                                {level}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 <button
                     onClick={handleSinglePlayer}
                     className="w-full py-4 text-xl border-2 border-neon-yellow text-neon-yellow hover:bg-gray-800 hover:shadow-[0_0_20px_rgba(250,204,21,0.6)] transition-all rounded font-bold flex items-center justify-center gap-3"

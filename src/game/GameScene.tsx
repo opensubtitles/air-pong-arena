@@ -9,6 +9,7 @@ import { PowerUpRenderer } from './PowerUpRenderer';
 import { PhysicsController } from './PhysicsController';
 import { HUD } from '../components/HUD';
 import { KeyboardControls } from '../components/KeyboardControls';
+import { CameraOverlay } from '../components/CameraOverlay';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 
 interface GameSceneProps {
@@ -39,6 +40,7 @@ export const GameScene: React.FC<GameSceneProps> = ({ demoMode = false }) => {
     return (
         <div className="w-full h-screen absolute top-0 left-0">
             {!demoMode && <HUD />}
+            {!demoMode && <CameraOverlay />}
 
             <div className="w-full h-full -z-10">
                 <Canvas

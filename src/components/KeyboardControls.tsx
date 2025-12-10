@@ -12,6 +12,11 @@ export const KeyboardControls = () => {
         const handleDown = (e: KeyboardEvent) => {
             if (e.code === 'ArrowLeft') keys.current.left = true;
             if (e.code === 'ArrowRight') keys.current.right = true;
+
+            // Activate Power Up
+            if (e.code === 'Space') {
+                gamePhysics.useInventory(role);
+            }
         };
 
         const handleUp = (e: KeyboardEvent) => {

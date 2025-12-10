@@ -29,6 +29,16 @@ class HandTrackingService {
             FistGesture,
             OpenPalmGesture
         ]);
+
+        // Create persistent hidden video element
+        this.video = document.createElement('video');
+        this.video.style.display = 'none'; // Hidden
+        this.video.style.position = 'absolute';
+        this.video.style.top = '-9999px';
+        this.video.autoplay = true;
+        this.video.playsInline = true;
+        this.video.muted = true;
+        document.body.appendChild(this.video);
     }
 
     async initialize() {
@@ -61,27 +71,46 @@ class HandTrackingService {
         console.log("HandTracker initialized");
     }
 
-    startWebcam(videoElement: HTMLVideoElement) {
-        this.video = videoElement;
-        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-            videoElement.srcObject = stream;
-            videoElement.muted = true; // Ensure muted for autoplay
-            videoElement.playsInline = true; // Required for mobile
+    async startWebcam(): Promise<MediaStream> {
+        if (!this.video) {
+            throw new Error("Video element not initialized");
+        }
 
-            // Play with error handling
-            videoElement.play().then(() => {
-                console.log('Video playing successfully');
-            }).catch((err) => {
-                console.error('Video play failed:', err);
+        // If already streaming, return existing stream
+        if (this.video.srcObject) {
+            console.log('Webcam already started, returning existing stream');
+            return this.video.srcObject as MediaStream;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            this.video.srcObject = stream;
+
+            // Wait for video to be ready
+            await new Promise<void>((resolve) => {
+                if (!this.video) return resolve();
+
+                this.video.onloadeddata = () => {
+                    console.log('Video loaded, starting hand tracking');
+                    this.predictWebcam();
+                    resolve();
+                };
+
+                // Fallback if event fired already
+                if (this.video.readyState >= 2) {
+                    this.predictWebcam();
+                    resolve();
+                }
             });
 
-            videoElement.addEventListener("loadeddata", () => {
-                console.log('Video loaded, starting hand tracking');
-                this.predictWebcam();
-            });
-        }).catch((err) => {
+            await this.video.play();
+            console.log('Persistent video playing successfully');
+
+            return stream;
+        } catch (err) {
             console.error('Camera access failed:', err);
-        });
+            throw err;
+        }
     }
 
     predictWebcam() {

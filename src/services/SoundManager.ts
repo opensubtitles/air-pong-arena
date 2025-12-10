@@ -63,6 +63,18 @@ class SoundManager {
         setTimeout(() => this.playTone(440, 'square', 0.4, 0.1), 250);
     }
 
+    public playError() {
+        // Low buzz for empty inventory
+        this.playTone(150, 'sawtooth', 0.2, 0.1);
+        setTimeout(() => this.playTone(100, 'sawtooth', 0.2, 0.1), 100);
+    }
+
+    public playPoint() {
+        // Simple positive chirp (distinct from Score)
+        this.playTone(880, 'sine', 0.1, 0.05);
+        setTimeout(() => this.playTone(1100, 'sine', 0.1, 0.05), 50);
+    }
+
     public playWin() {
         // Win Loop
         this.playTone(523.25, 'triangle', 0.2, 0.1);

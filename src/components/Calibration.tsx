@@ -82,26 +82,24 @@ export const Calibration: React.FC = () => {
                     await handTracking.initialize();
                 }
 
+                // Start persistent tracking and get stream
+                const stream = await handTracking.startWebcam();
+
+                // Attach stream to local visible video for feedback
                 if (videoRef.current) {
-                    handTracking.startWebcam(videoRef.current);
+                    videoRef.current.srcObject = stream;
                 }
 
                 // Check for camera readiness
                 const checkCamera = setInterval(() => {
-                    if (videoRef.current && videoRef.current.readyState === 4) {
+                    if (videoRef.current && videoRef.current.readyState >= 2) {
                         clearInterval(checkCamera);
                         // Delay showing message
                         setTimeout(() => {
                             setCameraReady(true);
-                            // Quick calibration for single player - skip to final step
-                            if (gameMode === 'SINGLE_PLAYER') {
-                                setStep('FINAL_CONFIRM');
-                                setMsg('Show your hand to start! ✋');
-                                setSubMsg('Move hand to control paddle');
-                            } else {
-                                setStep('DISTANCE_CHECK');
-                                setMsg('Show your hand ✋');
-                            }
+                            // Enable full training for everyone
+                            setStep('DISTANCE_CHECK');
+                            setMsg('Show your hand ✋');
                         }, 500);
                     }
                 }, 100);
